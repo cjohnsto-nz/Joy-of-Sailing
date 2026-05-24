@@ -1,60 +1,82 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <GameVersion Condition="'$(GameVersion)' == ''">1.22</GameVersion>
+    <TargetFramework Condition="'$(GameVersion)' == '1.21'">net8.0-windows</TargetFramework>
+    <TargetFramework Condition="'$(GameVersion)' == '1.22'">net10.0-windows</TargetFramework>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0-windows</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>bin\$(Configuration)\Mods\mod</OutputPath>
+    <OutputPath>bin\$(Configuration)\$(GameVersion)\</OutputPath>
+    <GamePath Condition="'$(GamePath)' == '' and '$(GameVersion)' == '1.21' and '$(VINTAGE_STORY_121)' != ''">$(VINTAGE_STORY_121)</GamePath>
+    <GamePath Condition="'$(GamePath)' == '' and '$(GameVersion)' == '1.22' and '$(VINTAGE_STORY_122)' != ''">$(VINTAGE_STORY_122)</GamePath>
+    <GamePath Condition="'$(GamePath)' == '' and Exists('$(VINTAGE_STORY)')">$(VINTAGE_STORY)</GamePath>
+    <AssemblyName>joyofsailing2</AssemblyName>
+    <RootNamespace>joyofsailing</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <PackagedGameDependencyVersion Condition="'$(GameVersion)' != ''">$(GameVersion).0</PackagedGameDependencyVersion>
+    <PackagedGameDependencyVersion Condition="'$(PackagedGameDependencyVersion)' == ''">1.22.0</PackagedGameDependencyVersion>
+    <PackagedGameVersionKey Condition="'$(GameVersion)' != ''">$([System.String]::Copy('$(GameVersion)').Replace('.', ''))</PackagedGameVersionKey>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="VintagestoryAPI">
-      <HintPath>$(VINTAGE_STORY)/VintagestoryAPI.dll</HintPath>
+      <HintPath>$(GamePath)\VintagestoryAPI.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="VSSurvivalMod">
-      <HintPath>$(VINTAGE_STORY)/Mods/VSSurvivalMod.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>$(GamePath)\Mods\VSSurvivalMod.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="VSEssentials">
-      <HintPath>$(VINTAGE_STORY)/Mods/VSEssentials.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>$(GamePath)\Mods\VSEssentials.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="VSCreativeMod">
-      <HintPath>$(VINTAGE_STORY)/Mods/VSCreativeMod.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>$(GamePath)\Mods\VSCreativeMod.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>$(VINTAGE_STORY)/Lib/Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>$(GamePath)\Lib\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="0Harmony">
-      <HintPath>$(VINTAGE_STORY)/Lib/0Harmony.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>$(GamePath)\Lib\0Harmony.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="VintagestoryLib">
-      <HintPath>$(VINTAGE_STORY)/VintagestoryLib.dll</HintPath>
+      <HintPath>$(GamePath)\VintagestoryLib.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="protobuf-net">
-      <HintPath>$(VINTAGE_STORY)/Lib/protobuf-net.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>$(GamePath)\Lib\protobuf-net.dll</HintPath>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
 
-<ItemGroup>
-  <Content Include="assets\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </Content>
-  <None Remove="assets\joyofsailing\entities\water\sailboat.json" />
-  <None Remove="assets\joyofsailing\shapes\entity\water\sailboat-new.json" />
-  <None Remove="assets\joyofsailing\shapes\sailboat_vanilla.json" />
-  <Content Include="modinfo.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </Content>
-</ItemGroup>
+  <Target Name="PackageMod" AfterTargets="Build">
+    <PropertyGroup>
+      <ModFolderName>JoyOfSailing</ModFolderName>
+      <ModPackageDir>ModPackage\$(ModFolderName)\</ModPackageDir>
+      <FullModPackagePath>$(OutputPath)\$(ModPackageDir)</FullModPackagePath>
+    </PropertyGroup>
 
-<ItemGroup>
-  <Folder Include="assets\joyofsailing\entities\water\" />
-</ItemGroup>
+    <Message Text="Packaging Joy of Sailing to: $(FullModPackagePath)" Importance="high" />
 
+    <RemoveDir Directories="$(FullModPackagePath)" Condition="Exists('$(FullModPackagePath)')" />
+    <MakeDir Directories="$(FullModPackagePath)" />
+
+    <Copy SourceFiles="modinfo.json" DestinationFolder="$(FullModPackagePath)" />
+    <Message Text="Rewriting packaged modinfo.json dependency to: $(PackagedGameDependencyVersion), game version key: $(PackagedGameVersionKey)" Importance="high" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$modinfoPath = '$(FullModPackagePath)modinfo.json'; $modinfo = Get-Content -LiteralPath $modinfoPath -Raw | ConvertFrom-Json; if (-not $modinfo.dependencies) { $modinfo | Add-Member -NotePropertyName dependencies -NotePropertyValue ([pscustomobject]@{}) }; $modinfo.dependencies.game = '$(PackagedGameDependencyVersion)'; if ($modinfo.dependencies.PSObject.Properties.Name -contains 'survival') { $modinfo.dependencies.survival = '$(PackagedGameDependencyVersion)' }; $v = [string]$modinfo.version; if ('$(PackagedGameVersionKey)' -ne '') { $parts = $v -split '\.'; $parts[0] = '$(PackagedGameVersionKey)'; $v = $parts -join '.' }; $modinfo.version = $v; $modinfo | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $modinfoPath -Encoding UTF8&quot;" />
+
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(FullModPackagePath)" />
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).deps.json" DestinationFolder="$(FullModPackagePath)" Condition="Exists('$(TargetDir)$(AssemblyName).deps.json')" />
+
+    <ItemGroup>
+      <_ModAssets Include="assets\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ModAssets)" DestinationFiles="@(_ModAssets->'$(FullModPackagePath)assets\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+
+    <Message Text="Joy of Sailing packaged successfully." Importance="high" />
+  </Target>
 </Project>

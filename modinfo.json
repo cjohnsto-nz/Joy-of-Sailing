@@ -6,8 +6,10 @@
         "Moby_"
     ],
     "description": "Better sailboats for vanilla, also used as a library for sailboat packs",
-    "version": "1.4.0-rc.5",
+    "version": "1.4.0-rc.6",
     "dependencies": {
-        "game": ""
-    }
+        "game": "1.22.0",
+        "survival": "1.22.0"
+    },
+    "side": "Universal"
 }
