@@ -31,10 +31,12 @@ namespace joyofsailing
 
         const string LeftRatlineAttachmentPoint = "RatlineLAP";
         const string RightRatlineAttachmentPoint = "RatlineRAP";
-        const float RatlineClimbSpeed = 1.25f;
         const float RatlineClimbMinHeight = 0f;
-        const float RatlineClimbMaxHeight = 3f;
         static readonly System.Reflection.FieldInfo RiderOffsetField = typeof(SeatConfig).GetField("RiderOffset");
+        static readonly Vec3f LeftRatlineBaseRiderOffset = new Vec3f(0f, 0f, 0.375f);
+        static readonly Vec3f RightRatlineBaseRiderOffset = new Vec3f(-0.0625f, 0.0625f, -0.375f);
+        static readonly Vec3f LeftRatlineBaseMountRotation = new Vec3f(15f, -85f, 4f);
+        static readonly Vec3f RightRatlineBaseMountRotation = new Vec3f(-15f, 85f, 4f);
 
         float sailLevel = 0f;
         float sailAccuracy = 0f;
@@ -51,7 +53,7 @@ namespace joyofsailing
         EntityBehaviorSelectionBoxes behaviorSelectionBoxes;
         Dictionary<string, int> selBoxId = new Dictionary<string, int>();
         readonly Dictionary<string, float> ratlineClimbBySeat = new Dictionary<string, float>();
-        readonly Dictionary<string, Vec3f> ratlineBaseRiderOffsetBySeat = new Dictionary<string, Vec3f>();
+        RatlineDebugRenderer ratlineDebugRenderer;
 
         float autoScullTimer = 0f;
         float autoScullEnableTimer = 0f;
@@ -75,6 +77,12 @@ namespace joyofsailing
 
             behaviorSelectionBoxes = this.GetBehavior<EntityBehaviorSelectionBoxes>();
             sailAttr = properties.Attributes["sailAttributes"].AsObject<SailboatAttributes>();
+
+            if (api is ICoreClientAPI capi)
+            {
+                ratlineDebugRenderer = new RatlineDebugRenderer(capi, this);
+                capi.Event.RegisterRenderer(ratlineDebugRenderer, EnumRenderStage.OIT, "josailing-ratline-debug");
+            }
         }
 
         public override void OnRenderFrame(float dt, EnumRenderStage stage)
@@ -107,7 +115,20 @@ namespace joyofsailing
                     float maxAngle = sailAttr.speedPitchMaximum / 57.2958f; // degrees to radians
                     entityShapeRenderer.zangle = mountAngle.Z + Math.Clamp(num, -maxAngle, maxAngle); // Only change in that method: makes sure the boat doesn't roll back too far when it's going fast
                 }
+
             }
+        }
+
+        public override void OnEntityDespawn(EntityDespawnData despawn)
+        {
+            if (Api is ICoreClientAPI capi && ratlineDebugRenderer != null)
+            {
+                capi.Event.UnregisterRenderer(ratlineDebugRenderer, EnumRenderStage.OIT);
+                ratlineDebugRenderer.Dispose();
+                ratlineDebugRenderer = null;
+            }
+
+            base.OnEntityDespawn(despawn);
         }
 
         public override void OnTesselation(ref Shape entityShape, string shapePathForLogging)
@@ -281,7 +302,7 @@ namespace joyofsailing
 
             sidedPos.Roll = 0f;
 
-            if (controlsVec != Vec3d.Zero)
+            if (controlsVec != Vec3d.Zero || hasRatlinePassenger)
             {
                 WatchedAttributes.SetFloat("josailing.sailLevel", sailLevel);
                 WatchedAttributes.SetFloat("josailing.sailAngle", sailAngle);
@@ -494,36 +515,109 @@ namespace joyofsailing
                 return;
             }
 
-            if (!ratlineBaseRiderOffsetBySeat.ContainsKey(seatKey))
-            {
-                ratlineBaseRiderOffsetBySeat[seatKey] = Copy(GetSeatOffset(config));
-            }
-
             float climbHeight = ratlineClimbBySeat.TryGetValue(seatKey, out float value) ? value : 0f;
             EntityControls controls = seat.controls;
             if (controls != null && (controls.Forward ^ controls.Backward))
             {
-                climbHeight += (controls.Forward ? 1f : -1f) * RatlineClimbSpeed * dt;
-                climbHeight = GameMath.Clamp(climbHeight, RatlineClimbMinHeight, RatlineClimbMaxHeight);
+                climbHeight += (controls.Forward ? 1f : -1f) * RatlineClimbDebugSettings.Speed * dt;
+                climbHeight = GameMath.Clamp(climbHeight, RatlineClimbMinHeight, RatlineClimbDebugSettings.MaxClimbHeight);
             }
 
             ratlineClimbBySeat[seatKey] = climbHeight;
 
-            Vec3f baseOffset = ratlineBaseRiderOffsetBySeat[seatKey];
+            ApplyRatlineClimbTransform(seat, GetRatlineBaseRiderOffset(seat), GetRatlineBaseMountRotation(seat), climbHeight);
+        }
+
+        private static Vec3f GetRatlinePathOffset(EntityBoatSeat seat, float climbHeight)
+        {
+            float pathZ = GetRatlinePathZ(seat);
+            Vec3f offset = new Vec3f(
+                (RatlineClimbDebugSettings.PathX - RatlineClimbDebugSettings.AssetPathX) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                (RatlineClimbDebugSettings.StartY - RatlineClimbDebugSettings.AssetStartY) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                (pathZ - GetAssetRatlinePathZ(seat)) / RatlineClimbDebugSettings.ModelUnitsPerBlock
+            );
+
+            offset.Add(GetRatlineClimbVector(seat, climbHeight));
+            return offset;
+        }
+
+        private static Vec3f GetRatlineClimbVector(EntityBoatSeat seat, float climbHeight)
+        {
+            float maxHeight = RatlineClimbDebugSettings.MaxClimbHeight;
+            if (maxHeight <= 0f)
+            {
+                return new Vec3f();
+            }
+
+            float side = IsLeftRatlineSeat(seat) ? 1f : -1f;
+            float progress = GameMath.Clamp(climbHeight / maxHeight, 0f, 1f);
+            Vec3f climbVector = new Vec3f(0f, (RatlineClimbDebugSettings.EndY - RatlineClimbDebugSettings.StartY) * progress, 0f);
+            RotateModelVectorX(climbVector, side * RatlineClimbDebugSettings.TiltDegrees);
+            RotateModelVectorY(climbVector, side * RatlineClimbDebugSettings.LeanDegrees);
+            climbVector.Mul(1f / RatlineClimbDebugSettings.ModelUnitsPerBlock);
+            return climbVector;
+        }
+
+        private static void RotateModelVectorX(Vec3f vector, float degrees)
+        {
+            float radians = degrees * GameMath.DEG2RAD;
+            float cos = GameMath.Cos(radians);
+            float sin = GameMath.Sin(radians);
+            float y = vector.Y * cos - vector.Z * sin;
+            float z = vector.Y * sin + vector.Z * cos;
+            vector.Y = y;
+            vector.Z = z;
+        }
+
+        private static void RotateModelVectorY(Vec3f vector, float degrees)
+        {
+            float radians = degrees * GameMath.DEG2RAD;
+            float cos = GameMath.Cos(radians);
+            float sin = GameMath.Sin(radians);
+            float x = vector.X * cos + vector.Z * sin;
+            float z = -vector.X * sin + vector.Z * cos;
+            vector.X = x;
+            vector.Z = z;
+        }
+
+        private static void RotateModelVectorZ(Vec3f vector, float degrees)
+        {
+            float radians = degrees * GameMath.DEG2RAD;
+            float cos = GameMath.Cos(radians);
+            float sin = GameMath.Sin(radians);
+            float x = vector.X * cos - vector.Y * sin;
+            float y = vector.X * sin + vector.Y * cos;
+            vector.X = x;
+            vector.Y = y;
+        }
+
+        private static Vec3f GetRatlineMountRotation(EntityBoatSeat seat, Vec3f baseRotation)
+        {
+            float side = IsLeftRatlineSeat(seat) ? 1f : -1f;
+            Vec3f rotation = Copy(baseRotation) ?? new Vec3f();
+            rotation.X += side * RatlineClimbDebugSettings.TiltDegrees;
+            rotation.Y += side * RatlineClimbDebugSettings.LeanDegrees;
+            return rotation;
+        }
+
+        private static void ApplyRatlineClimbTransform(EntityBoatSeat seat, Vec3f baseOffset, Vec3f baseRotation, float climbHeight)
+        {
             Vec3f climbOffset = Copy(baseOffset) ?? new Vec3f();
-            climbOffset.Y += climbHeight;
-            SetSeatOffset(config, climbOffset);
+            climbOffset.Add(GetRatlinePathOffset(seat, climbHeight));
+            SetSeatOffset(seat.Config, climbOffset);
+            seat.Config.MountRotation = GetRatlineMountRotation(seat, baseRotation);
         }
 
         private void ResetRatlineClimb(EntityBoatSeat seat)
         {
             string seatKey = GetRatlineSeatKey(seat);
-            if (seatKey == null || !ratlineBaseRiderOffsetBySeat.TryGetValue(seatKey, out Vec3f baseOffset))
+            if (seatKey == null)
             {
                 return;
             }
 
-            SetSeatOffset(seat.Config, Copy(baseOffset));
+            SetSeatOffset(seat.Config, GetRatlineBaseRiderOffset(seat));
+            seat.Config.MountRotation = GetRatlineBaseMountRotation(seat);
             ratlineClimbBySeat.Remove(seatKey);
         }
 
@@ -583,6 +677,92 @@ namespace joyofsailing
 #pragma warning disable CS0618
             return RiderOffsetField != null && config.MountOffset == null;
 #pragma warning restore CS0618
+        }
+
+        public void DrawRatlineDebugPaths(ICoreClientAPI capi)
+        {
+            if (!RatlineClimbDebugSettings.DrawPath)
+            {
+                return;
+            }
+
+            EntityBehaviorSeatable behavior = GetBehavior<EntityBehaviorSeatable>();
+            if (behavior?.Seats == null)
+            {
+                return;
+            }
+
+            foreach (IMountableSeat mountableSeat in behavior.Seats)
+            {
+                EntityBoatSeat seat = mountableSeat as EntityBoatSeat;
+                if (seat == null || !IsRatlineSeat(seat))
+                {
+                    continue;
+                }
+
+                DrawRatlineDebugPath(capi, seat, IsLeftRatlineSeat(seat)
+                    ? ColorUtil.ColorFromRgba(255, 64, 64, 255)
+                    : ColorUtil.ColorFromRgba(64, 160, 255, 255));
+            }
+        }
+
+        private void DrawRatlineDebugPath(ICoreClientAPI capi, EntityBoatSeat seat, int color)
+        {
+            SeatConfig config = seat.Config;
+            if (config == null)
+            {
+                return;
+            }
+
+            Vec3f currentRotation = Copy(config.MountRotation) ?? new Vec3f();
+            Vec3f currentOffset = Copy(GetSeatOffset(config));
+            Vec3f baseOffset = GetRatlineBaseRiderOffset(seat);
+            Vec3f baseRotation = GetRatlineBaseMountRotation(seat);
+            EntityPos startPos = GetRatlineSeatPositionAt(seat, baseOffset, baseRotation, RatlineClimbMinHeight);
+            EntityPos endPos = GetRatlineSeatPositionAt(seat, baseOffset, baseRotation, RatlineClimbDebugSettings.MaxClimbHeight);
+            SetSeatOffset(config, currentOffset);
+            config.MountRotation = currentRotation;
+
+            BlockPos origin = Pos.AsBlockPos;
+            capi.Render.RenderLine(
+                origin,
+                (float)(startPos.X - origin.X), (float)(startPos.Y - origin.Y), (float)(startPos.Z - origin.Z),
+                (float)(endPos.X - origin.X), (float)(endPos.Y - origin.Y), (float)(endPos.Z - origin.Z),
+                color
+            );
+        }
+
+        private EntityPos GetRatlineSeatPositionAt(EntityBoatSeat seat, Vec3f baseOffset, Vec3f baseRotation, float climbHeight)
+        {
+            ApplyRatlineClimbTransform(seat, baseOffset, baseRotation, climbHeight);
+            return seat.SeatPosition.Copy();
+        }
+
+        private static Vec3f GetRatlineBaseRiderOffset(EntityBoatSeat seat)
+        {
+            return Copy(IsLeftRatlineSeat(seat) ? LeftRatlineBaseRiderOffset : RightRatlineBaseRiderOffset);
+        }
+
+        private static Vec3f GetRatlineBaseMountRotation(EntityBoatSeat seat)
+        {
+            return Copy(IsLeftRatlineSeat(seat) ? LeftRatlineBaseMountRotation : RightRatlineBaseMountRotation);
+        }
+
+        private static float GetRatlinePathZ(EntityBoatSeat seat)
+        {
+            return IsLeftRatlineSeat(seat) ? RatlineClimbDebugSettings.LeftPathZ : RatlineClimbDebugSettings.RightPathZ;
+        }
+
+        private static float GetAssetRatlinePathZ(EntityBoatSeat seat)
+        {
+            return IsLeftRatlineSeat(seat) ? RatlineClimbDebugSettings.AssetLeftPathZ : RatlineClimbDebugSettings.AssetRightPathZ;
+        }
+
+        private static bool IsLeftRatlineSeat(EntityBoatSeat seat)
+        {
+            SeatConfig config = seat.Config;
+            return string.Equals(config?.APName, LeftRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(config?.SelectionBox, LeftRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase);
         }
 
         public void updateWind()

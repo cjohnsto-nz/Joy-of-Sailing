@@ -11,11 +11,13 @@ namespace joyofsailing
     public class joyofsailingModSystem : ModSystem
     {
         public static ClientMain main;
+        private GuiDialogSailboatDebug debugDialog;
 
         // Called on server and client
         // Useful for registering block/entity classes on both sides
         public override void Start(ICoreAPI api)
         {
+            RatlineClimbDebugSettings.ResetRuntimeToDefaults();
             api.RegisterEntity("EntitySailboat", typeof(EntitySailboat));
             Achievements.AchievementsManager.RegisterAchievement("joyofsailing", "joyofsailing.setsail", "joyofsailing:sailboat-oak");
         }
@@ -31,7 +33,26 @@ namespace joyofsailing
 
             main = api.World as ClientMain;
 
+            debugDialog = new GuiDialogSailboatDebug(api);
+            api.Gui.RegisterDialog(debugDialog);
+            api.Input.RegisterHotKey("joyofsailingratlinedebug", "Joy of Sailing: Ratline Debug", GlKeys.F9, HotkeyType.GUIOrOtherControls);
+            api.Input.SetHotKeyHandler("joyofsailingratlinedebug", OnToggleRatlineDebug);
 
+        }
+
+        private bool OnToggleRatlineDebug(KeyCombination keyCombination)
+        {
+            if (debugDialog == null)
+            {
+                return false;
+            }
+
+            if (debugDialog.IsOpened())
+            {
+                return debugDialog.TryClose();
+            }
+
+            return debugDialog.TryOpen();
         }
     }
 }
