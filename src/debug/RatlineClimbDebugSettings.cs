@@ -19,7 +19,7 @@ namespace joyofsailing
         public const float DefaultTriangleHeight = 90f;
         public const float DefaultTiltDegrees = 0f;
         public const float DefaultLeanDegrees = 7f;
-        public const float DefaultPlayerRotationDegrees = -90f;
+        public const float DefaultPlayerRotationDegrees = 135f;
         public const float DefaultLeftPlayerTiltDegrees = 6f;
         public const float DefaultRightPlayerTiltDegrees = 6f;
         public const float DefaultLeftPlayerLeanDegrees = 0f;
@@ -41,7 +41,7 @@ namespace joyofsailing
         public const bool DefaultEnablePlayerTilt = true;
         public const bool DefaultEnablePlayerYaw = true;
         public const bool DefaultEnablePlayerLean = true;
-        public const bool DefaultEnableSeatPathRoll = false;
+        public const bool DefaultEnableSeatPathRoll = true;
         public const bool DefaultEnableSeatPathYaw = false;
         public const bool DefaultEnableSeatPathPitch = true;
         public const bool DefaultEnableSeatConfigRoll = false;

@@ -1257,40 +1257,34 @@ namespace joyofsailing
             }
 
             pathDirection.Mul(1.0 / pathLength);
+            return GetRatlinePathRotationRelativeToSeatYaw(seat, pathDirection);
+        }
 
-            Vec3d staticXAxis = GetStaticBoatXAxis();
-            Vec3d staticYAxis = GetStaticBoatUpAxis();
-            Vec3d staticZAxis = GetStaticBoatZAxis();
-            if (staticXAxis == null || staticYAxis == null || staticZAxis == null)
+        private Vec3f GetRatlinePathRotationRelativeToSeatYaw(EntityBoatSeat seat, Vec3d pathDirection)
+        {
+            float yaw = GetRatlineSeatYaw(seat);
+            Vec3f forwardVec = EntityPos.GetViewVector(0f, yaw);
+            Vec3f rightVec = EntityPos.GetViewVector(0f, yaw + GameMath.PIHALF);
+            Vec3d forward = new Vec3d(forwardVec.X, forwardVec.Y, forwardVec.Z);
+            Vec3d right = new Vec3d(rightVec.X, rightVec.Y, rightVec.Z);
+            forward.Y = 0.0;
+            right.Y = 0.0;
+
+            double forwardLength = forward.Length();
+            double rightLength = right.Length();
+            if (forwardLength <= 0.0001 || rightLength <= 0.0001)
             {
                 return new Vec3f();
             }
 
-            Vec3d renderedLocalDirection = new Vec3d(
-                Dot(pathDirection, staticXAxis),
-                Dot(pathDirection, staticYAxis),
-                Dot(pathDirection, staticZAxis)
-            );
+            forward.Mul(1.0 / forwardLength);
+            right.Mul(1.0 / rightLength);
 
-            Vec3f staticStartPoint = GetRatlineTrianglePoint(seat, RatlineClimbMinHeight);
-            Vec3f staticEndPoint = GetRatlineTrianglePoint(seat, RatlineClimbDebugSettings.MaxClimbHeight);
-            Vec3d staticLocalDirection = new Vec3d(
-                staticEndPoint.X - staticStartPoint.X,
-                staticEndPoint.Y - staticStartPoint.Y,
-                staticEndPoint.Z - staticStartPoint.Z
-            );
-            double staticLength = staticLocalDirection.Length();
-            if (staticLength <= 0.0001)
-            {
-                return new Vec3f();
-            }
-
-            staticLocalDirection.Mul(1.0 / staticLength);
-
-            double roll = NormalizeAngleRad(Math.Atan2(renderedLocalDirection.X, renderedLocalDirection.Y)
-                - Math.Atan2(staticLocalDirection.X, staticLocalDirection.Y));
-            double pitch = -NormalizeAngleRad(Math.Atan2(renderedLocalDirection.Z, renderedLocalDirection.Y)
-                - Math.Atan2(staticLocalDirection.Z, staticLocalDirection.Y));
+            double upright = pathDirection.Y;
+            double forwardTilt = Dot(pathDirection, forward);
+            double rightTilt = Dot(pathDirection, right);
+            double pitch = Math.Atan2(forwardTilt, upright);
+            double roll = -Math.Atan2(rightTilt, upright);
             return new Vec3f((float)roll, 0f, (float)pitch);
         }
 
@@ -1658,8 +1652,36 @@ namespace joyofsailing
                     seatPos.Y = worldPosition.Y;
                     seatPos.Z = worldPosition.Z;
                     seatPos.Yaw = sailboat.GetRatlineSeatYaw(this);
-                    seatPos.Pitch = 0f;
-                    seatPos.Roll = 0f;
+                    Vec3f pathRotation = sailboat.GetCachedRatlineSeatWorldRotation(this)
+                        ?? sailboat.GetRatlinePathWorldRotation(this)
+                        ?? new Vec3f();
+
+                    seatPos.Roll = RatlineClimbDebugSettings.EnableSeatPathRoll ? pathRotation.X : 0f;
+                    if (RatlineClimbDebugSettings.EnableSeatPathYaw)
+                    {
+                        seatPos.Yaw += pathRotation.Y;
+                    }
+
+                    seatPos.Pitch = RatlineClimbDebugSettings.EnableSeatPathPitch ? pathRotation.Z : 0f;
+
+                    if (Config?.MountRotation != null)
+                    {
+                        if (RatlineClimbDebugSettings.EnableSeatConfigRoll)
+                        {
+                            seatPos.Roll += Config.MountRotation.X * GameMath.DEG2RAD;
+                        }
+
+                        if (RatlineClimbDebugSettings.EnableSeatConfigYaw)
+                        {
+                            seatPos.Yaw += Config.MountRotation.Y * GameMath.DEG2RAD;
+                        }
+
+                        if (RatlineClimbDebugSettings.EnableSeatConfigPitch)
+                        {
+                            seatPos.Pitch += Config.MountRotation.Z * GameMath.DEG2RAD;
+                        }
+                    }
+
                     return seatPos;
                 }
             }
