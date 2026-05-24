@@ -31,12 +31,13 @@ namespace joyofsailing
 
         const string LeftRatlineAttachmentPoint = "RatlineLAP";
         const string RightRatlineAttachmentPoint = "RatlineRAP";
+        const string RatlineClimbIdleAnimation = "climbidle";
+        const string RatlineClimbMoveAnimation = "climbup";
         const float RatlineClimbMinHeight = 0f;
         static readonly System.Reflection.FieldInfo RiderOffsetField = typeof(SeatConfig).GetField("RiderOffset");
         static readonly Vec3f LeftRatlineBaseRiderOffset = new Vec3f(0f, 0f, 0.375f);
         static readonly Vec3f RightRatlineBaseRiderOffset = new Vec3f(-0.0625f, 0.0625f, -0.375f);
-        static readonly Vec3f LeftRatlineBaseMountRotation = new Vec3f(15f, -85f, 4f);
-        static readonly Vec3f RightRatlineBaseMountRotation = new Vec3f(-15f, 85f, 4f);
+        static readonly Vec3f RatlineNeutralMountRotation = new Vec3f();
 
         float sailLevel = 0f;
         float sailAccuracy = 0f;
@@ -343,7 +344,8 @@ namespace joyofsailing
                 if (isRatlineSeat)
                 {
                     hasRatlinePassenger = true;
-                    UpdateRatlineClimb(entityBoatSeat, climbDt);
+                    bool isClimbing = UpdateRatlineClimb(entityBoatSeat, climbDt);
+                    UpdateRatlineClimbAnimation(entityBoatSeat, isClimbing);
                 }
 
                 if (!(entityBoatSeat.Passenger is EntityPlayer))
@@ -501,21 +503,22 @@ namespace joyofsailing
                 || string.Equals(code, RightRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase);
         }
 
-        private void UpdateRatlineClimb(EntityBoatSeat seat, float dt)
+        private bool UpdateRatlineClimb(EntityBoatSeat seat, float dt)
         {
             SeatConfig config = seat.Config;
             if (config == null)
             {
-                return;
+                return false;
             }
 
             string seatKey = GetRatlineSeatKey(seat);
             if (seatKey == null)
             {
-                return;
+                return false;
             }
 
             float climbHeight = ratlineClimbBySeat.TryGetValue(seatKey, out float value) ? value : 0f;
+            float oldClimbHeight = climbHeight;
             EntityControls controls = seat.controls;
             if (controls != null && (controls.Forward ^ controls.Backward))
             {
@@ -526,6 +529,25 @@ namespace joyofsailing
             ratlineClimbBySeat[seatKey] = climbHeight;
 
             ApplyRatlineClimbTransform(seat, GetRatlineBaseRiderOffset(seat), GetRatlineBaseMountRotation(seat), climbHeight);
+            return Math.Abs(climbHeight - oldClimbHeight) > 0.0001f;
+        }
+
+        private static void UpdateRatlineClimbAnimation(EntityBoatSeat seat, bool isClimbing)
+        {
+            IAnimationManager animManager = seat.Passenger?.AnimManager;
+            if (animManager == null)
+            {
+                return;
+            }
+
+            string activeAnimation = isClimbing ? RatlineClimbMoveAnimation : RatlineClimbIdleAnimation;
+            string inactiveAnimation = isClimbing ? RatlineClimbIdleAnimation : RatlineClimbMoveAnimation;
+
+            animManager.StopAnimation(inactiveAnimation);
+            if (!animManager.IsAnimationActive(activeAnimation))
+            {
+                animManager.StartAnimation(activeAnimation);
+            }
         }
 
         private static Vec3f GetRatlinePathOffset(EntityBoatSeat seat, float climbHeight)
@@ -595,8 +617,9 @@ namespace joyofsailing
         {
             float side = IsLeftRatlineSeat(seat) ? 1f : -1f;
             Vec3f rotation = Copy(baseRotation) ?? new Vec3f();
-            rotation.X += side * RatlineClimbDebugSettings.TiltDegrees;
-            rotation.Y += side * RatlineClimbDebugSettings.LeanDegrees;
+            rotation.X += IsLeftRatlineSeat(seat) ? RatlineClimbDebugSettings.LeftPlayerTiltDegrees : RatlineClimbDebugSettings.RightPlayerTiltDegrees;
+            rotation.Y += side * RatlineClimbDebugSettings.PlayerRotationDegrees;
+            rotation.Z += side * RatlineClimbDebugSettings.PlayerLeanDegrees;
             return rotation;
         }
 
@@ -745,7 +768,7 @@ namespace joyofsailing
 
         private static Vec3f GetRatlineBaseMountRotation(EntityBoatSeat seat)
         {
-            return Copy(IsLeftRatlineSeat(seat) ? LeftRatlineBaseMountRotation : RightRatlineBaseMountRotation);
+            return Copy(RatlineNeutralMountRotation);
         }
 
         private static float GetRatlinePathZ(EntityBoatSeat seat)

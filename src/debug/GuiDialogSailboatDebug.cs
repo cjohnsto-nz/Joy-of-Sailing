@@ -8,6 +8,11 @@ namespace joyofsailing
     public class GuiDialogSailboatDebug : GuiDialog
     {
         const string ComposerKey = "joyofsailing-ratline-debug";
+        const double RowHeight = 32.0;
+        const double LabelX = 0.0;
+        const double InputX = 154.0;
+        const double LabelWidth = 135.0;
+        const double InputWidth = 96.0;
 
         public override string ToggleKeyCombinationCode => "joyofsailingratlinedebug";
 
@@ -19,36 +24,59 @@ namespace joyofsailing
         private void Compose()
         {
             ElementBounds dialogBounds = ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.CenterMiddle);
-            ElementBounds bgBounds = ElementBounds.Fixed(0, 0, 420, 420);
-            ElementBounds insetBounds = bgBounds.ForkBoundingParent(GuiStyle.ElementToDialogPadding);
+            ElementBounds bgBounds = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding);
+            bgBounds.BothSizing = ElementSizing.FitToChildren;
 
             SingleComposer = capi.Gui.CreateCompo(ComposerKey, dialogBounds)
                 .AddShadedDialogBG(bgBounds)
                 .AddDialogTitleBar("Sailboat Ratline Debug", () => TryClose())
-                .BeginChildElements(insetBounds)
-                    .AddStaticText("Draw path", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 42, 160, 24))
-                    .AddSwitch(on => RatlineClimbDebugSettings.DrawPath = on, ElementBounds.Fixed(210, 38, 30, 30), "drawPath")
-                    .AddStaticText("Speed", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 80, 160, 24))
-                    .AddNumberInput(ElementBounds.Fixed(210, 74, 90, 28), value => SetFloat(value, v => RatlineClimbDebugSettings.Speed = GameMath.Max(0f, v)), CairoFont.TextInput(), "speed")
-                    .AddStaticText("Path X", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 118, 160, 24))
-                    .AddNumberInput(ElementBounds.Fixed(210, 112, 90, 28), value => SetFloat(value, v => RatlineClimbDebugSettings.PathX = v), CairoFont.TextInput(), "pathX")
-                    .AddStaticText("Left Z", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 156, 160, 24))
-                    .AddNumberInput(ElementBounds.Fixed(210, 150, 90, 28), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPathZ = v), CairoFont.TextInput(), "leftZ")
-                    .AddStaticText("Right Z", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 194, 160, 24))
-                    .AddNumberInput(ElementBounds.Fixed(210, 188, 90, 28), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPathZ = v), CairoFont.TextInput(), "rightZ")
-                    .AddStaticText("Start Y", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 232, 160, 24))
-                    .AddNumberInput(ElementBounds.Fixed(210, 226, 90, 28), value => SetFloat(value, v => RatlineClimbDebugSettings.StartY = v), CairoFont.TextInput(), "startY")
-                    .AddStaticText("End Y", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 270, 160, 24))
-                    .AddNumberInput(ElementBounds.Fixed(210, 264, 90, 28), value => SetFloat(value, v => RatlineClimbDebugSettings.EndY = v), CairoFont.TextInput(), "endY")
-                    .AddStaticText("Tilt", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 308, 160, 24))
-                    .AddNumberInput(ElementBounds.Fixed(210, 302, 90, 28), value => SetFloat(value, v => RatlineClimbDebugSettings.TiltDegrees = v), CairoFont.TextInput(), "tilt")
-                    .AddStaticText("Lean", CairoFont.WhiteSmallText(), ElementBounds.Fixed(0, 346, 160, 24))
-                    .AddNumberInput(ElementBounds.Fixed(210, 340, 90, 28), value => SetFloat(value, v => RatlineClimbDebugSettings.LeanDegrees = v), CairoFont.TextInput(), "lean")
-                    .AddButton("Reset", OnReset, ElementBounds.Fixed(0, 380, 120, 32))
+                .BeginChildElements(bgBounds)
+                    .AddStaticText("Draw path", CairoFont.WhiteSmallText(), LabelBounds(0))
+                    .AddSwitch(on => RatlineClimbDebugSettings.DrawPath = on, ElementBounds.Fixed(InputX, RowY(0) - 4, 30, 30), "drawPath")
+                    .AddStaticText("Speed", CairoFont.WhiteSmallText(), LabelBounds(1))
+                    .AddNumberInput(InputBounds(1), value => SetFloat(value, v => RatlineClimbDebugSettings.Speed = GameMath.Max(0f, v)), CairoFont.TextInput(), "speed")
+                    .AddStaticText("Path X", CairoFont.WhiteSmallText(), LabelBounds(2))
+                    .AddNumberInput(InputBounds(2), value => SetFloat(value, v => RatlineClimbDebugSettings.PathX = v), CairoFont.TextInput(), "pathX")
+                    .AddStaticText("Left Z", CairoFont.WhiteSmallText(), LabelBounds(3))
+                    .AddNumberInput(InputBounds(3), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPathZ = v), CairoFont.TextInput(), "leftZ")
+                    .AddStaticText("Right Z", CairoFont.WhiteSmallText(), LabelBounds(4))
+                    .AddNumberInput(InputBounds(4), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPathZ = v), CairoFont.TextInput(), "rightZ")
+                    .AddStaticText("Start Y", CairoFont.WhiteSmallText(), LabelBounds(5))
+                    .AddNumberInput(InputBounds(5), value => SetFloat(value, v => RatlineClimbDebugSettings.StartY = v), CairoFont.TextInput(), "startY")
+                    .AddStaticText("End Y", CairoFont.WhiteSmallText(), LabelBounds(6))
+                    .AddNumberInput(InputBounds(6), value => SetFloat(value, v => RatlineClimbDebugSettings.EndY = v), CairoFont.TextInput(), "endY")
+                    .AddStaticText("Path Tilt", CairoFont.WhiteSmallText(), LabelBounds(7))
+                    .AddNumberInput(InputBounds(7), value => SetFloat(value, v => RatlineClimbDebugSettings.TiltDegrees = v), CairoFont.TextInput(), "tilt")
+                    .AddStaticText("Path Lean", CairoFont.WhiteSmallText(), LabelBounds(8))
+                    .AddNumberInput(InputBounds(8), value => SetFloat(value, v => RatlineClimbDebugSettings.LeanDegrees = v), CairoFont.TextInput(), "lean")
+                    .AddStaticText("Player Rot", CairoFont.WhiteSmallText(), LabelBounds(9))
+                    .AddNumberInput(InputBounds(9), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerRotationDegrees = v), CairoFont.TextInput(), "playerRotation")
+                    .AddStaticText("Left Tilt", CairoFont.WhiteSmallText(), LabelBounds(10))
+                    .AddNumberInput(InputBounds(10), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPlayerTiltDegrees = v), CairoFont.TextInput(), "leftPlayerTilt")
+                    .AddStaticText("Right Tilt", CairoFont.WhiteSmallText(), LabelBounds(11))
+                    .AddNumberInput(InputBounds(11), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerTiltDegrees = v), CairoFont.TextInput(), "rightPlayerTilt")
+                    .AddStaticText("Player Lean", CairoFont.WhiteSmallText(), LabelBounds(12))
+                    .AddNumberInput(InputBounds(12), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerLeanDegrees = v), CairoFont.TextInput(), "playerLean")
+                    .AddButton("Reset", OnReset, ElementBounds.Fixed(LabelX, RowY(13) + 6, 112, 32))
                 .EndChildElements()
                 .Compose();
 
             SyncInputs();
+        }
+
+        private static double RowY(int row)
+        {
+            return 42.0 + row * RowHeight;
+        }
+
+        private static ElementBounds LabelBounds(int row)
+        {
+            return ElementBounds.Fixed(LabelX, RowY(row), LabelWidth, 24);
+        }
+
+        private static ElementBounds InputBounds(int row)
+        {
+            return ElementBounds.Fixed(InputX, RowY(row) - 6, InputWidth, 28);
         }
 
         private bool OnReset()
@@ -69,6 +97,10 @@ namespace joyofsailing
             SetInput("endY", RatlineClimbDebugSettings.EndY);
             SetInput("tilt", RatlineClimbDebugSettings.TiltDegrees);
             SetInput("lean", RatlineClimbDebugSettings.LeanDegrees);
+            SetInput("playerRotation", RatlineClimbDebugSettings.PlayerRotationDegrees);
+            SetInput("leftPlayerTilt", RatlineClimbDebugSettings.LeftPlayerTiltDegrees);
+            SetInput("rightPlayerTilt", RatlineClimbDebugSettings.RightPlayerTiltDegrees);
+            SetInput("playerLean", RatlineClimbDebugSettings.PlayerLeanDegrees);
         }
 
         private void SetInput(string key, float value)
