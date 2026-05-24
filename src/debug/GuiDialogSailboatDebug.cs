@@ -61,21 +61,40 @@ namespace joyofsailing
                     .AddNumberInput(InputBounds(13), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPlayerLeanDegrees = v), CairoFont.TextInput(), "leftPlayerLean")
                     .AddStaticText("Right Lean", CairoFont.WhiteSmallText(), LabelBounds(14))
                     .AddNumberInput(InputBounds(14), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerLeanDegrees = v), CairoFont.TextInput(), "rightPlayerLean")
-                    .AddStaticText("Mast X", CairoFont.WhiteSmallText(), LabelBounds(15))
-                    .AddNumberInput(InputBounds(15), value => SetFloat(value, v => RatlineClimbDebugSettings.MastDebugXOffset = v), CairoFont.TextInput(), "mastX")
-                    .AddStaticText("Invert X", CairoFont.WhiteSmallText(), LabelBounds(16))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayX = on, ElementBounds.Fixed(InputX, RowY(16) - 4, 30, 30), "invertSwayX")
-                    .AddStaticText("Invert Y", CairoFont.WhiteSmallText(), LabelBounds(17))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayY = on, ElementBounds.Fixed(InputX, RowY(17) - 4, 30, 30), "invertSwayY")
-                    .AddStaticText("Invert Z", CairoFont.WhiteSmallText(), LabelBounds(18))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayZ = on, ElementBounds.Fixed(InputX, RowY(18) - 4, 30, 30), "invertSwayZ")
-                    .AddStaticText("Invert Swivel", CairoFont.WhiteSmallText(), LabelBounds(19))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwaySwivel = on, ElementBounds.Fixed(InputX, RowY(19) - 4, 30, 30), "invertSwaySwivel")
-                    .AddButton("Reset", OnReset, ElementBounds.Fixed(LabelX, RowY(20) + 6, 112, 32))
+                    .AddStaticText("Player X", CairoFont.WhiteSmallText(), LabelBounds(15))
+                    .AddNumberInput(InputBounds(15), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetX = v), CairoFont.TextInput(), "playerOffsetX")
+                    .AddStaticText("Player Y", CairoFont.WhiteSmallText(), LabelBounds(16))
+                    .AddNumberInput(InputBounds(16), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetY = v), CairoFont.TextInput(), "playerOffsetY")
+                    .AddStaticText("Player Z", CairoFont.WhiteSmallText(), LabelBounds(17))
+                    .AddNumberInput(InputBounds(17), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetZ = v), CairoFont.TextInput(), "playerOffsetZ")
+                    .AddStaticText("Mast X", CairoFont.WhiteSmallText(), LabelBounds(18))
+                    .AddNumberInput(InputBounds(18), value => SetFloat(value, v => RatlineClimbDebugSettings.MastDebugXOffset = v), CairoFont.TextInput(), "mastX")
+                    .AddStaticText("Invert X", CairoFont.WhiteSmallText(), LabelBounds(19))
+                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayX = on, ElementBounds.Fixed(InputX, RowY(19) - 4, 30, 30), "invertSwayX")
+                    .AddStaticText("Invert Y", CairoFont.WhiteSmallText(), LabelBounds(20))
+                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayY = on, ElementBounds.Fixed(InputX, RowY(20) - 4, 30, 30), "invertSwayY")
+                    .AddStaticText("Invert Z", CairoFont.WhiteSmallText(), LabelBounds(21))
+                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayZ = on, ElementBounds.Fixed(InputX, RowY(21) - 4, 30, 30), "invertSwayZ")
+                    .AddStaticText("Invert Swivel", CairoFont.WhiteSmallText(), LabelBounds(22))
+                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwaySwivel = on, ElementBounds.Fixed(InputX, RowY(22) - 4, 30, 30), "invertSwaySwivel")
+                    .AddButton("Reset", OnReset, ElementBounds.Fixed(LabelX, RowY(23) + 6, 112, 32))
                 .EndChildElements()
                 .Compose();
 
+            ConfigureInputIntervals();
             SyncInputs();
+        }
+
+        private void ConfigureInputIntervals()
+        {
+            SetInputInterval("playerOffsetX", 0.1f);
+            SetInputInterval("playerOffsetY", 0.1f);
+            SetInputInterval("playerOffsetZ", 0.1f);
+        }
+
+        private void SetInputInterval(string key, float interval)
+        {
+            SingleComposer.GetNumberInput(key).Interval = interval;
         }
 
         private static double RowY(int row)
@@ -117,6 +136,9 @@ namespace joyofsailing
             SetInput("rightPlayerTilt", RatlineClimbDebugSettings.RightPlayerTiltDegrees);
             SetInput("leftPlayerLean", RatlineClimbDebugSettings.LeftPlayerLeanDegrees);
             SetInput("rightPlayerLean", RatlineClimbDebugSettings.RightPlayerLeanDegrees);
+            SetInput("playerOffsetX", RatlineClimbDebugSettings.PlayerOffsetX);
+            SetInput("playerOffsetY", RatlineClimbDebugSettings.PlayerOffsetY);
+            SetInput("playerOffsetZ", RatlineClimbDebugSettings.PlayerOffsetZ);
             SetInput("mastX", RatlineClimbDebugSettings.MastDebugXOffset);
             SingleComposer.GetSwitch("invertSwayX").SetValue(RatlineClimbDebugSettings.InvertSwayX);
             SingleComposer.GetSwitch("invertSwayY").SetValue(RatlineClimbDebugSettings.InvertSwayY);

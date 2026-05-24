@@ -12,7 +12,7 @@ namespace joyofsailing
         public const float AssetStartY = 0f;
 
         public const float DefaultPathX = 47f;
-        public const float DefaultPathCenterZ = 3f;
+        public const float DefaultPathCenterZ = 4f;
         public const float DefaultPathZOffset = 28f;
         public const float DefaultStartY = 0f;
         public const float DefaultEndY = 60f;
@@ -22,8 +22,11 @@ namespace joyofsailing
         public const float DefaultPlayerRotationDegrees = -90f;
         public const float DefaultLeftPlayerTiltDegrees = 6f;
         public const float DefaultRightPlayerTiltDegrees = 6f;
-        public const float DefaultLeftPlayerLeanDegrees = 6f;
+        public const float DefaultLeftPlayerLeanDegrees = 0f;
         public const float DefaultRightPlayerLeanDegrees = -6f;
+        public const float DefaultPlayerOffsetX = 1.1f;
+        public const float DefaultPlayerOffsetY = 0f;
+        public const float DefaultPlayerOffsetZ = -1.2f;
         public const float DefaultMastDebugXOffset = 0.25f;
         public const bool DefaultInvertSwayX = false;
         public const bool DefaultInvertSwayY = false;
@@ -45,6 +48,9 @@ namespace joyofsailing
         public static float RightPlayerTiltDegrees = DefaultRightPlayerTiltDegrees;
         public static float LeftPlayerLeanDegrees = DefaultLeftPlayerLeanDegrees;
         public static float RightPlayerLeanDegrees = DefaultRightPlayerLeanDegrees;
+        public static float PlayerOffsetX = DefaultPlayerOffsetX;
+        public static float PlayerOffsetY = DefaultPlayerOffsetY;
+        public static float PlayerOffsetZ = DefaultPlayerOffsetZ;
         public static float MastDebugXOffset = DefaultMastDebugXOffset;
         public static bool InvertSwayX = DefaultInvertSwayX;
         public static bool InvertSwayY = DefaultInvertSwayY;
@@ -70,6 +76,9 @@ namespace joyofsailing
             RightPlayerTiltDegrees = DefaultRightPlayerTiltDegrees;
             LeftPlayerLeanDegrees = DefaultLeftPlayerLeanDegrees;
             RightPlayerLeanDegrees = DefaultRightPlayerLeanDegrees;
+            PlayerOffsetX = DefaultPlayerOffsetX;
+            PlayerOffsetY = DefaultPlayerOffsetY;
+            PlayerOffsetZ = DefaultPlayerOffsetZ;
             MastDebugXOffset = DefaultMastDebugXOffset;
             InvertSwayX = DefaultInvertSwayX;
             InvertSwayY = DefaultInvertSwayY;
