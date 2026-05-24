@@ -29,6 +29,9 @@ namespace joyofsailing
         // joyofsailing.sailspeedmul : multiplies the speed of all sailboats when sailing
         // joyofsailing.scullspeedmul : multiplies the sculling speed of all sailboats
 
+        const string LeftRatlineAttachmentPoint = "RatlineLAP";
+        const string RightRatlineAttachmentPoint = "RatlineRAP";
+
         float sailLevel = 0f;
         float sailAccuracy = 0f;
 
@@ -187,7 +190,8 @@ namespace joyofsailing
             //this.shapeFresh = true;
 
             bool hasController = false;
-            Vec3d controlsVec = SeatsToMotionSail(physicsFrameTime, ref hasController);
+            bool hasRatlinePassenger = false;
+            Vec3d controlsVec = SeatsToMotionSail(physicsFrameTime, ref hasController, ref hasRatlinePassenger);
 
             if (!Swimming)
             {
@@ -206,7 +210,7 @@ namespace joyofsailing
             rudderAngle += (float)(((-controlsVec.Y / dt) - rudderAngle) * dt * 6f);
             rudderAngle = Math.Clamp(rudderAngle, -1f, 1f);
 
-            if (!hasController)
+            if (!hasController && !hasRatlinePassenger)
             {
                 sailLevel = 0f;
                 WatchedAttributes.SetFloat("josailing.sailLevel", sailLevel);
@@ -281,7 +285,7 @@ namespace joyofsailing
             sailAngle = WatchedAttributes.GetFloat("josailing.sailAngle", 0f);
         }
 
-        public virtual Vec3d SeatsToMotionSail(float dt, ref bool hasController)
+        public virtual Vec3d SeatsToMotionSail(float dt, ref bool hasController, ref bool hasRatlinePassenger)
         {
             int rowerCount = 0;
             double forwardAxis = 0.0;
@@ -296,6 +300,11 @@ namespace joyofsailing
                 if (entityBoatSeat.Passenger == null)
                 {
                     continue;
+                }
+
+                if (IsRatlineSeat(entityBoatSeat))
+                {
+                    hasRatlinePassenger = true;
                 }
 
                 if (!(entityBoatSeat.Passenger is EntityPlayer))
@@ -427,6 +436,30 @@ namespace joyofsailing
             }
 
             return new Vec3d(forwardAxis, sideAxis, sprintAxis);
+        }
+
+        private static bool IsRatlineSeat(EntityBoatSeat seat)
+        {
+            SeatConfig config = seat.Config;
+            if (config == null)
+            {
+                return false;
+            }
+
+            if (IsRatlineAttachmentPoint(config.APName) || IsRatlineAttachmentPoint(config.SelectionBox))
+            {
+                return true;
+            }
+
+            return string.Equals(config.Animation, "climbidle", StringComparison.OrdinalIgnoreCase)
+                && (config.Attributes?["tireWhenMounted"].AsBool(false) == true
+                    || config.Attributes?["vigorStaminaWhenMounted"].AsBool(false) == true);
+        }
+
+        private static bool IsRatlineAttachmentPoint(string code)
+        {
+            return string.Equals(code, LeftRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(code, RightRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase);
         }
 
         public void updateWind()

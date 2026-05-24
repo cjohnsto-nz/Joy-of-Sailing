@@ -9697,9 +9697,9 @@
 					"attachmentpoints": [
 						{
 							"code": "RatlineLAP",
-							"posX": "0.0",
-							"posY": "0.0",
-							"posZ": "0.0",
+							"posX": "14.0",
+							"posY": "47.0",
+							"posZ": "14.0",
 							"rotationX": "0.0",
 							"rotationY": "0.0",
 							"rotationZ": "0.0"
@@ -9716,9 +9716,9 @@
 					"attachmentpoints": [
 						{
 							"code": "RatlineRAP",
-							"posX": "0.0",
-							"posY": "0.0",
-							"posZ": "0.0",
+							"posX": "14.0",
+							"posY": "47.0",
+							"posZ": "-9.0",
 							"rotationX": "0.0",
 							"rotationY": "0.0",
 							"rotationZ": "0.0"
