@@ -59,6 +59,7 @@ namespace joyofsailing
         readonly Dictionary<string, float> ratlineClimbBySeat = new Dictionary<string, float>();
         readonly Dictionary<string, Vec3f> ratlineWorldRotationBySeat = new Dictionary<string, Vec3f>();
         RatlineDebugRenderer ratlineDebugRenderer;
+        long nextRatlineClimbWarningMs;
 
         float autoScullTimer = 0f;
         float autoScullEnableTimer = 0f;
@@ -358,8 +359,15 @@ namespace joyofsailing
                 if (isRatlineSeat)
                 {
                     hasRatlinePassenger = true;
-                    int climbDirection = UpdateRatlineClimb(entityBoatSeat, climbDt);
-                    UpdateRatlineClimbAnimation(entityBoatSeat, climbDirection);
+                    try
+                    {
+                        int climbDirection = UpdateRatlineClimb(entityBoatSeat, climbDt);
+                        UpdateRatlineClimbAnimation(entityBoatSeat, climbDirection);
+                    }
+                    catch (Exception ex)
+                    {
+                        WarnRatlineClimbUpdateFailed(ex);
+                    }
                 }
 
                 if (!(entityBoatSeat.Passenger is EntityPlayer))
@@ -644,14 +652,40 @@ namespace joyofsailing
         private Vec3f GetRatlinePathOffset(EntityBoatSeat seat, float climbHeight)
         {
             Vec3f pathPoint = GetRatlineTrianglePoint(seat, climbHeight);
-            Vec3f anchorPoint = GetRatlineAnchorPoint(seat) ?? GetAssetRatlineAnchorPoint(seat);
+            Vec3f anchorPoint = TryGetRatlineAnchorPoint(seat) ?? GetAssetRatlineAnchorPoint(seat);
             Vec3f offset = new Vec3f(
                 (pathPoint.X - anchorPoint.X) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
                 (pathPoint.Y - anchorPoint.Y) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
                 (pathPoint.Z - anchorPoint.Z) / RatlineClimbDebugSettings.ModelUnitsPerBlock
             );
-            offset.Add(GetRatlineSwayLocalOffset(pathPoint));
+            offset.Add(TryGetRatlineSwayLocalOffset(pathPoint));
             return offset;
+        }
+
+        private Vec3f TryGetRatlineAnchorPoint(EntityBoatSeat seat)
+        {
+            try
+            {
+                return GetRatlineAnchorPoint(seat);
+            }
+            catch (Exception ex)
+            {
+                WarnRatlineClimbUpdateFailed(ex);
+                return null;
+            }
+        }
+
+        private Vec3f TryGetRatlineSwayLocalOffset(Vec3f pathPoint)
+        {
+            try
+            {
+                return GetRatlineSwayLocalOffset(pathPoint);
+            }
+            catch (Exception ex)
+            {
+                WarnRatlineClimbUpdateFailed(ex);
+                return new Vec3f();
+            }
         }
 
         private static Vec3f GetRatlineTrianglePoint(EntityBoatSeat seat, float climbHeight)
@@ -1049,9 +1083,18 @@ namespace joyofsailing
 
             for (int i = 0; i < behaviorSelectionBoxes.selectionBoxes.Length; i++)
             {
-                if (string.Equals(behaviorSelectionBoxes.selectionBoxes[i].AttachPoint.Code, attachmentPointCode, StringComparison.OrdinalIgnoreCase))
+                string code = behaviorSelectionBoxes.selectionBoxes[i]?.AttachPoint?.Code;
+                if (string.Equals(code, attachmentPointCode, StringComparison.OrdinalIgnoreCase))
                 {
-                    return behaviorSelectionBoxes.GetCenterPosOfBox(i);
+                    try
+                    {
+                        return behaviorSelectionBoxes.GetCenterPosOfBox(i);
+                    }
+                    catch (Exception ex)
+                    {
+                        WarnRatlineClimbUpdateFailed(ex);
+                        return null;
+                    }
                 }
             }
 
@@ -1132,6 +1175,18 @@ namespace joyofsailing
                 RatlineClimbDebugSettings.AssetStartY,
                 GetAssetRatlinePathZ(seat)
             );
+        }
+
+        private void WarnRatlineClimbUpdateFailed(Exception ex)
+        {
+            long elapsedMs = World?.ElapsedMilliseconds ?? 0L;
+            if (elapsedMs < nextRatlineClimbWarningMs)
+            {
+                return;
+            }
+
+            nextRatlineClimbWarningMs = elapsedMs + 5000L;
+            Api?.Logger?.Warning("Joy of Sailing ratline climb update fell back: {0}", ex);
         }
 
         private static double Dot(Vec3d a, Vec3d b)
