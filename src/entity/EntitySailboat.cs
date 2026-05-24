@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -125,6 +126,13 @@ namespace joyofsailing
 
                     float maxAngle = sailAttr.speedPitchMaximum / 57.2958f; // degrees to radians
                     entityShapeRenderer.zangle = mountAngle.Z + Math.Clamp(num, -maxAngle, maxAngle); // Only change in that method: makes sure the boat doesn't roll back too far when it's going fast
+                    if (RatlineClimbDebugSettings.OverrideBoatSway)
+                    {
+                        entityShapeRenderer.xangle = RatlineClimbDebugSettings.BoatSwayXDegrees * GameMath.DEG2RAD;
+                        entityShapeRenderer.yangle = RatlineClimbDebugSettings.BoatSwayYDegrees * GameMath.DEG2RAD;
+                        entityShapeRenderer.zangle = RatlineClimbDebugSettings.BoatSwayZDegrees * GameMath.DEG2RAD;
+                        entityShapeRenderer.nowSwivelRad = RatlineClimbDebugSettings.BoatSwivelDegrees * GameMath.DEG2RAD;
+                    }
                 }
 
             }
@@ -337,6 +345,9 @@ namespace joyofsailing
             EntityBehaviorSeatable behavior = GetBehavior<EntityBehaviorSeatable>();
             behavior.Controller = null;
             IMountableSeat[] seats = behavior.Seats;
+            bool hasControllablePassenger = seats.Any(seat => seat is EntityBoatSeat boatSeat
+                && boatSeat.Passenger != null
+                && boatSeat.Config?.Controllable == true);
             for (int i = 0; i < seats.Length; i++)
             {
                 EntityBoatSeat entityBoatSeat = seats[i] as EntityBoatSeat;
@@ -367,6 +378,18 @@ namespace joyofsailing
                     catch (Exception ex)
                     {
                         WarnRatlineClimbUpdateFailed(ex);
+                    }
+
+                    if (RatlineClimbDebugSettings.EnableRatlineSteering && !hasControllablePassenger)
+                    {
+                        EntityControls ratlineControls = entityBoatSeat.controls;
+                        if (ratlineControls != null && (ratlineControls.Left ^ ratlineControls.Right))
+                        {
+                            hasController = true;
+                            behavior.Controller ??= entityBoatSeat.Passenger;
+                            float keyPressed = ratlineControls.Left ? 1f : -1f;
+                            sideAxis += keyPressed * dt * RatlineClimbDebugSettings.RatlineSteeringMultiplier;
+                        }
                     }
                 }
 
@@ -653,12 +676,21 @@ namespace joyofsailing
         {
             Vec3f pathPoint = GetRatlineTrianglePoint(seat, climbHeight);
             Vec3f anchorPoint = TryGetRatlineAnchorPoint(seat) ?? GetAssetRatlineAnchorPoint(seat);
-            Vec3f offset = new Vec3f(
-                (pathPoint.X - anchorPoint.X) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
-                (pathPoint.Y - anchorPoint.Y) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
-                (pathPoint.Z - anchorPoint.Z) / RatlineClimbDebugSettings.ModelUnitsPerBlock
-            );
-            offset.Add(TryGetRatlineSwayLocalOffset(pathPoint));
+            Vec3f offset = new Vec3f();
+            if (RatlineClimbDebugSettings.EnablePathOffset)
+            {
+                offset.Add(new Vec3f(
+                    (pathPoint.X - anchorPoint.X) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                    (pathPoint.Y - anchorPoint.Y) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                    (pathPoint.Z - anchorPoint.Z) / RatlineClimbDebugSettings.ModelUnitsPerBlock
+                ));
+            }
+
+            if (RatlineClimbDebugSettings.EnableSwayOffset)
+            {
+                offset.Add(TryGetRatlineSwayLocalOffset(seat, pathPoint));
+            }
+
             return offset;
         }
 
@@ -675,11 +707,11 @@ namespace joyofsailing
             }
         }
 
-        private Vec3f TryGetRatlineSwayLocalOffset(Vec3f pathPoint)
+        private Vec3f TryGetRatlineSwayLocalOffset(EntityBoatSeat seat, Vec3f pathPoint)
         {
             try
             {
-                return GetRatlineSwayLocalOffset(pathPoint);
+                return GetRatlineSwayLocalOffset(seat, pathPoint);
             }
             catch (Exception ex)
             {
@@ -717,8 +749,16 @@ namespace joyofsailing
             );
 
             Vec3f pathVector = new Vec3f(pathPoint.X - bottomPoint.X, pathPoint.Y - bottomPoint.Y, pathPoint.Z - bottomPoint.Z);
-            RotateModelVectorX(pathVector, side * RatlineClimbDebugSettings.TiltDegrees);
-            RotateModelVectorY(pathVector, side * RatlineClimbDebugSettings.LeanDegrees);
+            if (RatlineClimbDebugSettings.EnablePathTilt)
+            {
+                RotateModelVectorX(pathVector, side * RatlineClimbDebugSettings.TiltDegrees);
+            }
+
+            if (RatlineClimbDebugSettings.EnablePathLean)
+            {
+                RotateModelVectorY(pathVector, side * RatlineClimbDebugSettings.LeanDegrees);
+            }
+
             return new Vec3f(bottomPoint.X + pathVector.X, bottomPoint.Y + pathVector.Y, bottomPoint.Z + pathVector.Z);
         }
 
@@ -760,18 +800,27 @@ namespace joyofsailing
             bool isLeft = IsLeftRatlineSeat(seat);
             float side = isLeft ? 1f : -1f;
             Vec3f rotation = Copy(baseRotation) ?? new Vec3f();
-            rotation.X += isLeft ? RatlineClimbDebugSettings.LeftPlayerTiltDegrees : RatlineClimbDebugSettings.RightPlayerTiltDegrees;
-            rotation.Y += side * RatlineClimbDebugSettings.PlayerRotationDegrees;
-            rotation.Z += isLeft ? RatlineClimbDebugSettings.LeftPlayerLeanDegrees : -RatlineClimbDebugSettings.RightPlayerLeanDegrees;
+            if (RatlineClimbDebugSettings.EnablePlayerTilt)
+            {
+                rotation.X += isLeft ? RatlineClimbDebugSettings.LeftPlayerTiltDegrees : RatlineClimbDebugSettings.RightPlayerTiltDegrees;
+            }
+
+            if (RatlineClimbDebugSettings.EnablePlayerYaw)
+            {
+                rotation.Y += side * RatlineClimbDebugSettings.PlayerRotationDegrees;
+            }
+
+            if (RatlineClimbDebugSettings.EnablePlayerLean)
+            {
+                rotation.Z += isLeft ? RatlineClimbDebugSettings.LeftPlayerLeanDegrees : -RatlineClimbDebugSettings.RightPlayerLeanDegrees;
+            }
+
             return rotation;
         }
 
         private void ApplyRatlineClimbTransform(EntityBoatSeat seat, Vec3f baseOffset, Vec3f baseRotation, float climbHeight)
         {
-            Vec3f climbOffset = Copy(baseOffset) ?? new Vec3f();
-            climbOffset.Add(GetRatlinePathOffset(seat, climbHeight));
-            climbOffset.Add(GetRatlinePlayerOffset(seat));
-            SetSeatOffset(seat.Config, climbOffset);
+            SetSeatOffset(seat.Config, Copy(baseOffset) ?? new Vec3f());
             seat.Config.MountRotation = GetRatlineMountRotation(seat, baseRotation);
         }
 
@@ -793,6 +842,186 @@ namespace joyofsailing
             }
 
             return null;
+        }
+
+        private float GetRatlinePlayerFrontBackSwaySourcePitch()
+        {
+            float speedPitch = 0f;
+            if (Swimming)
+            {
+                float maxAngle = sailAttr.speedPitchMaximum / 57.2958f;
+                speedPitch = Math.Clamp((0f - (float)ForwardSpeed) * 1.3f * sailAttr.speedPitchMultiplier, -maxAngle, maxAngle);
+            }
+
+            return mountAngle.Z + speedPitch;
+        }
+
+        private float GetRatlinePlayerFrontBackSideSign(EntityBoatSeat seat)
+        {
+            return IsLeftRatlineSeat(seat) ? -1f : 1f;
+        }
+
+        private float GetRatlinePlayerFrontBackSwayPitch(EntityBoatSeat seat)
+        {
+            if (!RatlineClimbDebugSettings.EnablePlayerFrontBackSway)
+            {
+                return 0f;
+            }
+
+            float sign = RatlineClimbDebugSettings.InvertPlayerFrontBackSway ? -1f : 1f;
+            return GetRatlinePlayerFrontBackSideSign(seat) * sign * GetRatlinePlayerFrontBackSwaySourcePitch();
+        }
+
+        public void AppendRatlinePlayerTransformDebug(IMountableSeat mountableSeat, StringBuilder left, StringBuilder right)
+        {
+            EntityBoatSeat seat = mountableSeat as EntityBoatSeat;
+            if (seat == null)
+            {
+                left.AppendLine("Mounted seat is not an EntityBoatSeat.");
+                return;
+            }
+
+            if (!IsRatlineSeat(seat))
+            {
+                left.AppendLine("Mounted on this sailboat, but not on a ratline seat.");
+                left.AppendLine("Seat key: " + (GetRatlineSeatKey(seat) ?? "unknown"));
+                return;
+            }
+
+            string seatKey = GetRatlineSeatKey(seat) ?? "unknown";
+            bool isLeft = IsLeftRatlineSeat(seat);
+            float climbHeight = ratlineClimbBySeat.TryGetValue(seatKey, out float storedClimbHeight) ? storedClimbHeight : 0f;
+            Vec3f pathPoint = GetRatlineTrianglePoint(seat, climbHeight);
+            Vec3d pathWorldPosition = GetRatlineTriangleWorldPositionAt(seat, climbHeight);
+            Vec3d playerWorldOffset = GetRatlinePlayerWorldOffset(seat);
+            Vec3d directSeatWorldPosition = TryGetRatlineSeatWorldPosition(seat);
+            Vec3f anchorPoint = TryGetRatlineAnchorPoint(seat) ?? GetAssetRatlineAnchorPoint(seat);
+            Vec3f pathDelta = new Vec3f(
+                (pathPoint.X - anchorPoint.X) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                (pathPoint.Y - anchorPoint.Y) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                (pathPoint.Z - anchorPoint.Z) / RatlineClimbDebugSettings.ModelUnitsPerBlock
+            );
+            Vec3f swayDelta = TryGetRatlineSwayLocalOffset(seat, pathPoint);
+            Vec3f playerOffset = GetRatlinePlayerOffset(seat);
+            Vec3f finalSeatOffset = GetSeatOffset(seat.Config);
+            Vec3f baseRotation = GetRatlineBaseMountRotation(seat);
+            Vec3f mountRotation = seat.Config?.MountRotation;
+            Vec3f cachedPathRotation = GetCachedRatlineSeatWorldRotation(seat) ?? new Vec3f();
+            Vec3f livePathRotation = GetRatlinePathWorldRotation(seat) ?? new Vec3f();
+            float frontBackSourcePitch = GetRatlinePlayerFrontBackSwaySourcePitch();
+            float frontBackAppliedPitch = GetRatlinePlayerFrontBackSwayPitch(seat);
+            float seatFrontBackRoll = RatlineClimbDebugSettings.EnableSeatFrontBackSway ? frontBackAppliedPitch : 0f;
+            float eyeFrontBackPitch = RatlineClimbDebugSettings.EnableEyeFrontBackSway ? frontBackAppliedPitch : 0f;
+            float modelFrontBackPitch = RatlineClimbDebugSettings.EnableModelFrontBackSway ? frontBackAppliedPitch : 0f;
+            EntityPos seatPosition = seat.SeatPosition;
+            Vec3f localEyePos = seat.LocalEyePos;
+            EntityShapeRenderer renderer = base.Properties?.Client?.Renderer as EntityShapeRenderer;
+
+            left.AppendLine("--- Mounted Ratline ---");
+            left.AppendLine("Seat: " + (isLeft ? "Left" : "Right"));
+            left.AppendLine("Seat key: " + seatKey);
+            left.AppendLine("Passenger: " + (seat.Passenger?.Code?.ToString() ?? "none"));
+            left.AppendLine("Climb: " + F(climbHeight) + " / " + F(RatlineClimbDebugSettings.MaxClimbHeight) + " blocks");
+            left.AppendLine("ForwardSpeed: " + F((float)ForwardSpeed));
+            left.AppendLine("Swimming: " + Swimming);
+            left.AppendLine("Ratline steering: " + RatlineClimbDebugSettings.EnableRatlineSteering
+                + " x" + F(RatlineClimbDebugSettings.RatlineSteeringMultiplier));
+
+            left.AppendLine();
+            left.AppendLine("--- Contribution Switches ---");
+            left.AppendLine("Direct seat lock: path world point + player align offset");
+            left.AppendLine("Player align offset enabled: " + RatlineClimbDebugSettings.EnablePlayerOffset);
+            left.AppendLine("Path tilt / lean: "
+                + RatlineClimbDebugSettings.EnablePathTilt + " / "
+                + RatlineClimbDebugSettings.EnablePathLean);
+            left.AppendLine("Player tilt / yaw / lean: "
+                + RatlineClimbDebugSettings.EnablePlayerTilt + " / "
+                + RatlineClimbDebugSettings.EnablePlayerYaw + " / "
+                + RatlineClimbDebugSettings.EnablePlayerLean);
+            left.AppendLine("Seat path R/Y/P: "
+                + RatlineClimbDebugSettings.EnableSeatPathRoll + " / "
+                + RatlineClimbDebugSettings.EnableSeatPathYaw + " / "
+                + RatlineClimbDebugSettings.EnableSeatPathPitch);
+            left.AppendLine("Seat pose R/Y/P: "
+                + RatlineClimbDebugSettings.EnableSeatConfigRoll + " / "
+                + RatlineClimbDebugSettings.EnableSeatConfigYaw + " / "
+                + RatlineClimbDebugSettings.EnableSeatConfigPitch);
+            left.AppendLine("Direct seat FB / FB source / Eye tilt lean FB / Model FB: "
+                + RatlineClimbDebugSettings.EnableSeatFrontBackSway + " / "
+                + RatlineClimbDebugSettings.EnablePlayerFrontBackSway + " / "
+                + RatlineClimbDebugSettings.EnableEyeConfigTilt + " "
+                + RatlineClimbDebugSettings.EnableEyeConfigLean + " "
+                + RatlineClimbDebugSettings.EnableEyeFrontBackSway + " / "
+                + RatlineClimbDebugSettings.EnableModelFrontBackSway);
+
+            left.AppendLine();
+            left.AppendLine("--- Offset Pipeline (blocks) ---");
+            left.AppendLine("Base rider offset: " + Vec(GetRatlineBaseRiderOffset(seat)));
+            left.AppendLine("Anchor model point: " + Vec(anchorPoint));
+            left.AppendLine("Path model point: " + Vec(pathPoint));
+            left.AppendLine("Path delta: " + Vec(pathDelta));
+            left.AppendLine("Sway delta: " + Vec(swayDelta));
+            left.AppendLine("Player align offset: " + Vec(playerOffset));
+            left.AppendLine("Final config offset: " + Vec(finalSeatOffset));
+            left.AppendLine("Path world position: " + Vec(pathWorldPosition));
+            left.AppendLine("Player world offset: " + Vec(playerWorldOffset));
+            left.AppendLine("Direct seat world: " + Vec(directSeatWorldPosition));
+
+            left.AppendLine();
+            left.AppendLine("--- Final Player Positions ---");
+            left.AppendLine("SeatPosition XYZ: " + PosXYZ(seatPosition));
+            left.AppendLine("SeatPosition RYP: " + PosRot(seatPosition));
+            left.AppendLine("LocalEyePos: " + Vec(localEyePos));
+            if (seat.Passenger != null)
+            {
+                left.AppendLine("Passenger Pos XYZ: " + PosXYZ(seat.Passenger.Pos));
+                left.AppendLine("Passenger Pos RYP: " + PosRot(seat.Passenger.Pos));
+            }
+
+            right.AppendLine("--- Mount Rotation (degrees) ---");
+            right.AppendLine("Base mount rotation: " + Vec(baseRotation));
+            right.AppendLine("Config MountRotation: " + Vec(mountRotation));
+            right.AppendLine("Player tilt setting: " + F(isLeft ? RatlineClimbDebugSettings.LeftPlayerTiltDegrees : RatlineClimbDebugSettings.RightPlayerTiltDegrees));
+            right.AppendLine("Player yaw setting: " + F((isLeft ? 1f : -1f) * RatlineClimbDebugSettings.PlayerRotationDegrees));
+            right.AppendLine("Player lean setting: " + F(isLeft ? RatlineClimbDebugSettings.LeftPlayerLeanDegrees : -RatlineClimbDebugSettings.RightPlayerLeanDegrees));
+
+            right.AppendLine();
+            right.AppendLine("--- Sway Rotation Inputs ---");
+            right.AppendLine("override sway: " + RatlineClimbDebugSettings.OverrideBoatSway);
+            right.AppendLine("debug sway deg: ("
+                + F(RatlineClimbDebugSettings.BoatSwayXDegrees) + ", "
+                + F(RatlineClimbDebugSettings.BoatSwayYDegrees) + ", "
+                + F(RatlineClimbDebugSettings.BoatSwayZDegrees) + ", swivel "
+                + F(RatlineClimbDebugSettings.BoatSwivelDegrees) + ")");
+            right.AppendLine("override yaw: " + RatlineClimbDebugSettings.OverrideBoatYaw
+                + " -> " + F(RatlineClimbDebugSettings.BoatYawDegrees) + " deg");
+            right.AppendLine("mountAngle: " + VecRad(mountAngle));
+            right.AppendLine("direct FB source: " + Deg(frontBackSourcePitch));
+            right.AppendLine("direct FB side sign: " + F(GetRatlinePlayerFrontBackSideSign(seat)));
+            right.AppendLine("direct FB invert: " + RatlineClimbDebugSettings.InvertPlayerFrontBackSway);
+            right.AppendLine("direct FB applied: " + Deg(frontBackAppliedPitch));
+            if (renderer != null)
+            {
+                right.AppendLine("renderer xangle: " + Deg(renderer.xangle));
+                right.AppendLine("renderer yangle: " + Deg(renderer.yangle));
+                right.AppendLine("renderer zangle: " + Deg(renderer.zangle));
+                right.AppendLine("renderer swivel: " + Deg(renderer.nowSwivelRad));
+            }
+
+            right.AppendLine();
+            right.AppendLine("--- Legacy Path Rotation Diagnostics ---");
+            right.AppendLine("Cached path rot: " + VecRad(cachedPathRotation));
+            right.AppendLine("Live path rot: " + VecRad(livePathRotation));
+            right.AppendLine("Not applied to SeatPosition in direct-lock mode.");
+            right.AppendLine("Direct FB roll setting: " + Deg(seatFrontBackRoll));
+
+            right.AppendLine();
+            right.AppendLine("--- Eye / Model Operations ---");
+            right.AppendLine("SeatPosition XYZ is direct world path lock.");
+            right.AppendLine("SeatPosition yaw: boat yaw + config yaw.");
+            right.AppendLine("LocalEyePos: unrotated seat eye offset.");
+            right.AppendLine("RenderTransform: RotateDeg(Config.MountRotation).");
+            right.AppendLine("Old eye/model FB settings are not applied.");
         }
 
         private void UpdateRatlineWorldPositionCache(EntityBoatSeat seat)
@@ -969,7 +1198,10 @@ namespace joyofsailing
         {
             Matrixf transform = new Matrixf();
             transform.Identity();
-            transform.RotateY((float)Math.PI / 2f + Pos.Yaw);
+            float yaw = RatlineClimbDebugSettings.OverrideBoatYaw
+                ? RatlineClimbDebugSettings.BoatYawDegrees * GameMath.DEG2RAD
+                : Pos.Yaw;
+            transform.RotateY((float)Math.PI / 2f + yaw);
 
             EntityShapeRenderer entityShapeRenderer = base.Properties?.Client?.Renderer as EntityShapeRenderer;
             if (includeSway && entityShapeRenderer != null)
@@ -1025,42 +1257,124 @@ namespace joyofsailing
             }
 
             pathDirection.Mul(1.0 / pathLength);
-            double horizontalLength = Math.Sqrt(pathDirection.X * pathDirection.X + pathDirection.Z * pathDirection.Z);
-            if (horizontalLength <= 0.0001)
+
+            Vec3d staticXAxis = GetStaticBoatXAxis();
+            Vec3d staticYAxis = GetStaticBoatUpAxis();
+            Vec3d staticZAxis = GetStaticBoatZAxis();
+            if (staticXAxis == null || staticYAxis == null || staticZAxis == null)
             {
                 return new Vec3f();
             }
 
-            double angleFromWorldUp = Math.Atan2(horizontalLength, pathDirection.Y);
-            double rotationAxisX = pathDirection.Z / horizontalLength;
-            double rotationAxisZ = -pathDirection.X / horizontalLength;
+            Vec3d renderedLocalDirection = new Vec3d(
+                Dot(pathDirection, staticXAxis),
+                Dot(pathDirection, staticYAxis),
+                Dot(pathDirection, staticZAxis)
+            );
 
-            float mountYaw = (seat.Config?.MountRotation?.Y ?? 0f) * GameMath.DEG2RAD;
-            float playerYaw = Pos.Yaw + mountYaw;
-            var forwardVec = EntityPos.GetViewVector(0f, playerYaw);
-            var rightVec = EntityPos.GetViewVector(0f, playerYaw + GameMath.PIHALF);
-
-            Vec3d playerForward = NormalizeHorizontal(forwardVec.X, forwardVec.Z);
-            Vec3d playerRight = NormalizeHorizontal(rightVec.X, rightVec.Z);
-            if (playerForward == null || playerRight == null)
+            Vec3f staticStartPoint = GetRatlineTrianglePoint(seat, RatlineClimbMinHeight);
+            Vec3f staticEndPoint = GetRatlineTrianglePoint(seat, RatlineClimbDebugSettings.MaxClimbHeight);
+            Vec3d staticLocalDirection = new Vec3d(
+                staticEndPoint.X - staticStartPoint.X,
+                staticEndPoint.Y - staticStartPoint.Y,
+                staticEndPoint.Z - staticStartPoint.Z
+            );
+            double staticLength = staticLocalDirection.Length();
+            if (staticLength <= 0.0001)
             {
                 return new Vec3f();
             }
 
-            double roll = angleFromWorldUp * (rotationAxisX * playerForward.X + rotationAxisZ * playerForward.Z);
-            double pitch = angleFromWorldUp * (rotationAxisX * playerRight.X + rotationAxisZ * playerRight.Z);
+            staticLocalDirection.Mul(1.0 / staticLength);
+
+            double roll = NormalizeAngleRad(Math.Atan2(renderedLocalDirection.X, renderedLocalDirection.Y)
+                - Math.Atan2(staticLocalDirection.X, staticLocalDirection.Y));
+            double pitch = -NormalizeAngleRad(Math.Atan2(renderedLocalDirection.Z, renderedLocalDirection.Y)
+                - Math.Atan2(staticLocalDirection.Z, staticLocalDirection.Y));
             return new Vec3f((float)roll, 0f, (float)pitch);
         }
 
-        private static Vec3d NormalizeHorizontal(double x, double z)
+        private float GetRatlineClimbHeight(EntityBoatSeat seat)
         {
-            double length = Math.Sqrt(x * x + z * z);
-            if (length <= 0.0001)
+            string seatKey = GetRatlineSeatKey(seat);
+            if (seatKey != null && ratlineClimbBySeat.TryGetValue(seatKey, out float climbHeight))
+            {
+                return climbHeight;
+            }
+
+            return RatlineClimbMinHeight;
+        }
+
+        private Vec3d TryGetRatlineSeatWorldPosition(EntityBoatSeat seat)
+        {
+            try
+            {
+                return GetRatlineSeatWorldPosition(seat);
+            }
+            catch (Exception ex)
+            {
+                WarnRatlineClimbUpdateFailed(ex);
+                return null;
+            }
+        }
+
+        private Vec3d GetRatlineSeatWorldPosition(EntityBoatSeat seat)
+        {
+            Vec3d pathPosition = GetRatlineTriangleWorldPositionAt(seat, GetRatlineClimbHeight(seat));
+            if (pathPosition == null)
             {
                 return null;
             }
 
-            return new Vec3d(x / length, 0.0, z / length);
+            if (!RatlineClimbDebugSettings.EnablePlayerOffset)
+            {
+                return pathPosition;
+            }
+
+            return pathPosition + GetRatlinePlayerWorldOffset(seat);
+        }
+
+        private Vec3d GetRatlinePlayerWorldOffset(EntityBoatSeat seat)
+        {
+            Vec3f localOffset = GetRatlinePlayerOffset(seat);
+            Vec3d xAxis = GetRenderedBoatXAxis();
+            Vec3d yAxis = GetRenderedBoatUpAxis();
+            Vec3d zAxis = GetRenderedBoatZAxis();
+            if (xAxis == null || yAxis == null || zAxis == null)
+            {
+                return Vec3d.Zero;
+            }
+
+            return xAxis * localOffset.X + yAxis * localOffset.Y + zAxis * localOffset.Z;
+        }
+
+        private float GetRatlineSeatYaw(EntityBoatSeat seat)
+        {
+            float yaw = RatlineClimbDebugSettings.OverrideBoatYaw
+                ? RatlineClimbDebugSettings.BoatYawDegrees * GameMath.DEG2RAD
+                : Pos.Yaw;
+
+            if (seat.Config?.MountRotation != null)
+            {
+                yaw += seat.Config.MountRotation.Y * GameMath.DEG2RAD;
+            }
+
+            return yaw;
+        }
+
+        private static double NormalizeAngleRad(double angle)
+        {
+            while (angle > Math.PI)
+            {
+                angle -= Math.PI * 2.0;
+            }
+
+            while (angle < -Math.PI)
+            {
+                angle += Math.PI * 2.0;
+            }
+
+            return angle;
         }
 
         private void DrawDebugLine(ICoreClientAPI capi, Vec3d startPos, Vec3d endPos, int color)
@@ -1088,7 +1402,7 @@ namespace joyofsailing
                 {
                     try
                     {
-                        return behaviorSelectionBoxes.GetCenterPosOfBox(i);
+                        return GetSelectionBoxCenter(behaviorSelectionBoxes.selectionBoxes[i]);
                     }
                     catch (Exception ex)
                     {
@@ -1099,6 +1413,58 @@ namespace joyofsailing
             }
 
             return null;
+        }
+
+        private Vec3d GetSelectionBoxCenter(AttachmentPointAndPose apap)
+        {
+            if (apap?.AttachPoint?.ParentElement == null)
+            {
+                return null;
+            }
+
+            Matrixf transform = new Matrixf();
+            transform.Identity();
+            ApplySelectionBoxTransform(transform, apap);
+
+            ShapeElement parentElement = apap.AttachPoint.ParentElement;
+            Vec4d boxCenter = new Vec4d(
+                (parentElement.To[0] - parentElement.From[0]) / 2.0 / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                (parentElement.To[1] - parentElement.From[1]) / 2.0 / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                (parentElement.To[2] - parentElement.From[2]) / 2.0 / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                1.0
+            );
+
+            return transform.TransformVector(boxCenter).XYZ.Add(Pos.XYZ);
+        }
+
+        private void ApplySelectionBoxTransform(Matrixf transform, AttachmentPointAndPose apap)
+        {
+            EntityShapeRenderer renderer = base.Properties?.Client?.Renderer as EntityShapeRenderer;
+            transform.RotateY(GameMath.PIHALF + Pos.Yaw);
+            if (renderer != null)
+            {
+                transform.Translate(0f, (float)SelectionBox.Y2 / 2f, 0f);
+                transform.RotateX(renderer.xangle);
+                transform.RotateY(renderer.yangle);
+                transform.RotateZ(renderer.zangle);
+                transform.Translate(0f, (float)-SelectionBox.Y2 / 2f, 0f);
+            }
+
+            transform.Translate(0f, 0.7f, 0f);
+            transform.RotateX(renderer?.nowSwivelRad ?? 0f);
+            transform.Translate(0f, -0.7f, 0f);
+
+            float size = base.Properties?.Client?.Size ?? 1f;
+            transform.Scale(size, size, size);
+            transform.Translate(-0.5f, 0f, -0.5f);
+            transform.Mul(apap.AnimModelMatrix);
+
+            ShapeElement parentElement = apap.AttachPoint.ParentElement;
+            transform.Scale(
+                (float)(parentElement.To[0] - parentElement.From[0]) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                (float)(parentElement.To[1] - parentElement.From[1]) / RatlineClimbDebugSettings.ModelUnitsPerBlock,
+                (float)(parentElement.To[2] - parentElement.From[2]) / RatlineClimbDebugSettings.ModelUnitsPerBlock
+            );
         }
 
         private Vec3d GetRatlineTriangleWorldPositionAt(EntityBoatSeat seat, float climbHeight)
@@ -1119,7 +1485,7 @@ namespace joyofsailing
             return lowerMastPos + xAxis * x + yAxis * y + zAxis * z;
         }
 
-        private Vec3f GetRatlineSwayLocalOffset(Vec3f pathPoint)
+        private Vec3f GetRatlineSwayLocalOffset(EntityBoatSeat seat, Vec3f pathPoint)
         {
             Vec3d staticXAxis = GetStaticBoatXAxis();
             Vec3d staticYAxis = GetStaticBoatUpAxis();
@@ -1214,6 +1580,50 @@ namespace joyofsailing
             return IsLeftRatlineSeat(seat) ? RatlineClimbDebugSettings.AssetLeftPathZ : RatlineClimbDebugSettings.AssetRightPathZ;
         }
 
+        private static string F(float value)
+        {
+            return value.ToString("0.000", CultureInfo.InvariantCulture);
+        }
+
+        private static string F(double value)
+        {
+            return value.ToString("0.000", CultureInfo.InvariantCulture);
+        }
+
+        private static string Deg(float radians)
+        {
+            return F(radians * GameMath.RAD2DEG) + " deg";
+        }
+
+        private static string Vec(Vec3f value)
+        {
+            return value == null ? "(null)" : "(" + F(value.X) + ", " + F(value.Y) + ", " + F(value.Z) + ")";
+        }
+
+        private static string Vec(Vec3d value)
+        {
+            return value == null ? "(null)" : "(" + F(value.X) + ", " + F(value.Y) + ", " + F(value.Z) + ")";
+        }
+
+        private static string VecRad(Vec3f value)
+        {
+            return value == null
+                ? "(null)"
+                : "(" + Deg(value.X) + ", " + Deg(value.Y) + ", " + Deg(value.Z) + ")";
+        }
+
+        private static string PosXYZ(EntityPos pos)
+        {
+            return pos == null ? "(null)" : "(" + F(pos.X) + ", " + F(pos.Y) + ", " + F(pos.Z) + ")";
+        }
+
+        private static string PosRot(EntityPos pos)
+        {
+            return pos == null
+                ? "(null)"
+                : "(roll " + Deg(pos.Roll) + ", yaw " + Deg(pos.Yaw) + ", pitch " + Deg(pos.Pitch) + ")";
+        }
+
         private static bool IsLeftRatlineSeat(EntityBoatSeat seat)
         {
             SeatConfig config = seat.Config;
@@ -1232,28 +1642,25 @@ namespace joyofsailing
             {
                 get
                 {
-                    EntityPos pos = base.SeatPosition;
-                    if (!IsRatlineSeat(this) || Config?.MountRotation == null)
+                    if (!IsRatlineSeat(this) || Entity is not EntitySailboat sailboat)
                     {
-                        return pos;
+                        return base.SeatPosition;
                     }
 
-                    EntityPos cameraPos = pos.Copy();
-                    if (Entity is EntitySailboat sailboat)
+                    Vec3d worldPosition = sailboat.TryGetRatlineSeatWorldPosition(this);
+                    if (worldPosition == null)
                     {
-                        Vec3f swayRotation = sailboat.GetCachedRatlineSeatWorldRotation(this);
-                        if (swayRotation != null)
-                        {
-                            cameraPos.Roll -= swayRotation.X;
-                            cameraPos.Yaw += swayRotation.Y;
-                            cameraPos.Pitch -= swayRotation.Z;
-                        }
+                        return base.SeatPosition;
                     }
 
-                    cameraPos.Roll += Config.MountRotation.X * GameMath.DEG2RAD;
-                    cameraPos.Yaw += Config.MountRotation.Y * GameMath.DEG2RAD;
-                    cameraPos.Pitch += Config.MountRotation.Z * GameMath.DEG2RAD;
-                    return cameraPos;
+                    seatPos.SetFrom(Entity.Pos);
+                    seatPos.X = worldPosition.X;
+                    seatPos.Y = worldPosition.Y;
+                    seatPos.Z = worldPosition.Z;
+                    seatPos.Yaw = sailboat.GetRatlineSeatYaw(this);
+                    seatPos.Pitch = 0f;
+                    seatPos.Roll = 0f;
+                    return seatPos;
                 }
             }
 
@@ -1261,16 +1668,12 @@ namespace joyofsailing
             {
                 get
                 {
-                    Vec3f eyePos = base.LocalEyePos;
-                    if (!IsRatlineSeat(this) || Config?.MountRotation == null)
+                    if (!IsRatlineSeat(this))
                     {
-                        return eyePos;
+                        return base.LocalEyePos;
                     }
 
-                    Vec3f adjustedEyePos = Copy(eyePos) ?? new Vec3f();
-                    RotateModelVectorX(adjustedEyePos, Config.MountRotation.X);
-                    RotateModelVectorZ(adjustedEyePos, IsLeftRatlineSeat(this) ? Config.MountRotation.Z : -Config.MountRotation.Z);
-                    return adjustedEyePos;
+                    return Copy(eyePos) ?? new Vec3f();
                 }
             }
 
@@ -1278,17 +1681,10 @@ namespace joyofsailing
             {
                 get
                 {
-                    if (!IsRatlineSeat(this) || IsLeftRatlineSeat(this) || Config?.MountRotation == null)
+                    if (!IsRatlineSeat(this) || Config?.MountRotation == null)
                     {
                         return base.RenderTransform;
                     }
-
-#pragma warning disable CS0618
-                    if (Config.MountOffset != null)
-                    {
-                        return base.RenderTransform;
-                    }
-#pragma warning restore CS0618
 
                     Matrixf transform = new Matrixf();
                     transform.Identity();
@@ -1300,8 +1696,7 @@ namespace joyofsailing
                         transform.Translate(Config.RiderOffset.Clone().Mul(passengerSize - 1f));
                     }
 
-                    transform.RotateX(Config.MountRotation.X * GameMath.DEG2RAD);
-                    transform.RotateZ(-Config.MountRotation.Z * GameMath.DEG2RAD);
+                    transform.RotateDeg(Config.MountRotation);
                     return transform;
                 }
             }

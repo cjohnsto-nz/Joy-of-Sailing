@@ -12,6 +12,7 @@ namespace joyofsailing
     {
         public static ClientMain main;
         private GuiDialogSailboatDebug debugDialog;
+        private GuiDialogSailboatTransformDebug transformDebugDialog;
 
         // Called on server and client
         // Useful for registering block/entity classes on both sides
@@ -33,7 +34,10 @@ namespace joyofsailing
 
             main = api.World as ClientMain;
 
-            debugDialog = new GuiDialogSailboatDebug(api);
+            transformDebugDialog = new GuiDialogSailboatTransformDebug(api);
+            api.Gui.RegisterDialog(transformDebugDialog);
+
+            debugDialog = new GuiDialogSailboatDebug(api, transformDebugDialog);
             api.Gui.RegisterDialog(debugDialog);
             api.Input.RegisterHotKey("joyofsailingratlinedebug", "Joy of Sailing: Ratline Debug", GlKeys.F9, HotkeyType.GUIOrOtherControls);
             api.Input.SetHotKeyHandler("joyofsailingratlinedebug", OnToggleRatlineDebug);
