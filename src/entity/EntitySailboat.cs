@@ -31,6 +31,10 @@ namespace joyofsailing
 
         const string LeftRatlineAttachmentPoint = "RatlineLAP";
         const string RightRatlineAttachmentPoint = "RatlineRAP";
+        const float RatlineClimbSpeed = 1.25f;
+        const float RatlineClimbMinHeight = 0f;
+        const float RatlineClimbMaxHeight = 3f;
+        static readonly System.Reflection.FieldInfo RiderOffsetField = typeof(SeatConfig).GetField("RiderOffset");
 
         float sailLevel = 0f;
         float sailAccuracy = 0f;
@@ -46,6 +50,8 @@ namespace joyofsailing
 
         EntityBehaviorSelectionBoxes behaviorSelectionBoxes;
         Dictionary<string, int> selBoxId = new Dictionary<string, int>();
+        readonly Dictionary<string, float> ratlineClimbBySeat = new Dictionary<string, float>();
+        readonly Dictionary<string, Vec3f> ratlineBaseRiderOffsetBySeat = new Dictionary<string, Vec3f>();
 
         float autoScullTimer = 0f;
         float autoScullEnableTimer = 0f;
@@ -191,7 +197,7 @@ namespace joyofsailing
 
             bool hasController = false;
             bool hasRatlinePassenger = false;
-            Vec3d controlsVec = SeatsToMotionSail(physicsFrameTime, ref hasController, ref hasRatlinePassenger);
+            Vec3d controlsVec = SeatsToMotionSail(physicsFrameTime, dt, ref hasController, ref hasRatlinePassenger);
 
             if (!Swimming)
             {
@@ -285,7 +291,7 @@ namespace joyofsailing
             sailAngle = WatchedAttributes.GetFloat("josailing.sailAngle", 0f);
         }
 
-        public virtual Vec3d SeatsToMotionSail(float dt, ref bool hasController, ref bool hasRatlinePassenger)
+        public virtual Vec3d SeatsToMotionSail(float dt, float climbDt, ref bool hasController, ref bool hasRatlinePassenger)
         {
             int rowerCount = 0;
             double forwardAxis = 0.0;
@@ -297,14 +303,26 @@ namespace joyofsailing
             for (int i = 0; i < seats.Length; i++)
             {
                 EntityBoatSeat entityBoatSeat = seats[i] as EntityBoatSeat;
-                if (entityBoatSeat.Passenger == null)
+                if (entityBoatSeat == null)
                 {
                     continue;
                 }
 
-                if (IsRatlineSeat(entityBoatSeat))
+                bool isRatlineSeat = IsRatlineSeat(entityBoatSeat);
+                if (entityBoatSeat.Passenger == null)
+                {
+                    if (isRatlineSeat)
+                    {
+                        ResetRatlineClimb(entityBoatSeat);
+                    }
+
+                    continue;
+                }
+
+                if (isRatlineSeat)
                 {
                     hasRatlinePassenger = true;
+                    UpdateRatlineClimb(entityBoatSeat, climbDt);
                 }
 
                 if (!(entityBoatSeat.Passenger is EntityPlayer))
@@ -460,6 +478,111 @@ namespace joyofsailing
         {
             return string.Equals(code, LeftRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(code, RightRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void UpdateRatlineClimb(EntityBoatSeat seat, float dt)
+        {
+            SeatConfig config = seat.Config;
+            if (config == null)
+            {
+                return;
+            }
+
+            string seatKey = GetRatlineSeatKey(seat);
+            if (seatKey == null)
+            {
+                return;
+            }
+
+            if (!ratlineBaseRiderOffsetBySeat.ContainsKey(seatKey))
+            {
+                ratlineBaseRiderOffsetBySeat[seatKey] = Copy(GetSeatOffset(config));
+            }
+
+            float climbHeight = ratlineClimbBySeat.TryGetValue(seatKey, out float value) ? value : 0f;
+            EntityControls controls = seat.controls;
+            if (controls != null && (controls.Forward ^ controls.Backward))
+            {
+                climbHeight += (controls.Forward ? 1f : -1f) * RatlineClimbSpeed * dt;
+                climbHeight = GameMath.Clamp(climbHeight, RatlineClimbMinHeight, RatlineClimbMaxHeight);
+            }
+
+            ratlineClimbBySeat[seatKey] = climbHeight;
+
+            Vec3f baseOffset = ratlineBaseRiderOffsetBySeat[seatKey];
+            Vec3f climbOffset = Copy(baseOffset) ?? new Vec3f();
+            climbOffset.Y += climbHeight;
+            SetSeatOffset(config, climbOffset);
+        }
+
+        private void ResetRatlineClimb(EntityBoatSeat seat)
+        {
+            string seatKey = GetRatlineSeatKey(seat);
+            if (seatKey == null || !ratlineBaseRiderOffsetBySeat.TryGetValue(seatKey, out Vec3f baseOffset))
+            {
+                return;
+            }
+
+            SetSeatOffset(seat.Config, Copy(baseOffset));
+            ratlineClimbBySeat.Remove(seatKey);
+        }
+
+        private static string GetRatlineSeatKey(EntityBoatSeat seat)
+        {
+            SeatConfig config = seat.Config;
+            if (config == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(config.APName))
+            {
+                return config.APName;
+            }
+
+            if (!string.IsNullOrEmpty(config.SelectionBox))
+            {
+                return config.SelectionBox;
+            }
+
+            return config.Animation;
+        }
+
+        private static Vec3f Copy(Vec3f value)
+        {
+            return value == null ? null : new Vec3f(value.X, value.Y, value.Z);
+        }
+
+        private static Vec3f GetSeatOffset(SeatConfig config)
+        {
+            if (ShouldUseRiderOffset(config))
+            {
+                return RiderOffsetField.GetValue(config) as Vec3f;
+            }
+
+#pragma warning disable CS0618
+            return config.MountOffset;
+#pragma warning restore CS0618
+        }
+
+        private static void SetSeatOffset(SeatConfig config, Vec3f offset)
+        {
+            if (ShouldUseRiderOffset(config))
+            {
+                RiderOffsetField.SetValue(config, offset);
+                return;
+            }
+
+#pragma warning disable CS0618
+            config.MountOffset = offset;
+#pragma warning restore CS0618
+        }
+
+        private static bool ShouldUseRiderOffset(SeatConfig config)
+        {
+#pragma warning disable CS0618
+            return RiderOffsetField != null && config.MountOffset == null;
+#pragma warning restore CS0618
         }
 
         public void updateWind()
