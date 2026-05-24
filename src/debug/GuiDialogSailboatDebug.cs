@@ -55,9 +55,11 @@ namespace joyofsailing
                     .AddNumberInput(InputBounds(10), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPlayerTiltDegrees = v), CairoFont.TextInput(), "leftPlayerTilt")
                     .AddStaticText("Right Tilt", CairoFont.WhiteSmallText(), LabelBounds(11))
                     .AddNumberInput(InputBounds(11), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerTiltDegrees = v), CairoFont.TextInput(), "rightPlayerTilt")
-                    .AddStaticText("Player Lean", CairoFont.WhiteSmallText(), LabelBounds(12))
-                    .AddNumberInput(InputBounds(12), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerLeanDegrees = v), CairoFont.TextInput(), "playerLean")
-                    .AddButton("Reset", OnReset, ElementBounds.Fixed(LabelX, RowY(13) + 6, 112, 32))
+                    .AddStaticText("Left Lean", CairoFont.WhiteSmallText(), LabelBounds(12))
+                    .AddNumberInput(InputBounds(12), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPlayerLeanDegrees = v), CairoFont.TextInput(), "leftPlayerLean")
+                    .AddStaticText("Right Lean", CairoFont.WhiteSmallText(), LabelBounds(13))
+                    .AddNumberInput(InputBounds(13), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerLeanDegrees = v), CairoFont.TextInput(), "rightPlayerLean")
+                    .AddButton("Reset", OnReset, ElementBounds.Fixed(LabelX, RowY(14) + 6, 112, 32))
                 .EndChildElements()
                 .Compose();
 
@@ -100,7 +102,8 @@ namespace joyofsailing
             SetInput("playerRotation", RatlineClimbDebugSettings.PlayerRotationDegrees);
             SetInput("leftPlayerTilt", RatlineClimbDebugSettings.LeftPlayerTiltDegrees);
             SetInput("rightPlayerTilt", RatlineClimbDebugSettings.RightPlayerTiltDegrees);
-            SetInput("playerLean", RatlineClimbDebugSettings.PlayerLeanDegrees);
+            SetInput("leftPlayerLean", RatlineClimbDebugSettings.LeftPlayerLeanDegrees);
+            SetInput("rightPlayerLean", RatlineClimbDebugSettings.RightPlayerLeanDegrees);
         }
 
         private void SetInput(string key, float value)

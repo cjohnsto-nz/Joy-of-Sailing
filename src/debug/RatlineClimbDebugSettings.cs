@@ -11,17 +11,18 @@ namespace joyofsailing
         public const float AssetRightPathZ = -15f;
         public const float AssetStartY = 0f;
 
-        public const float DefaultPathX = 33f;
-        public const float DefaultLeftPathZ = 37f;
+        public const float DefaultPathX = 32f;
+        public const float DefaultLeftPathZ = 40f;
         public const float DefaultRightPathZ = -32f;
         public const float DefaultStartY = 0f;
         public const float DefaultEndY = 60f;
         public const float DefaultTiltDegrees = -15f;
         public const float DefaultLeanDegrees = 33f;
         public const float DefaultPlayerRotationDegrees = -90f;
-        public const float DefaultLeftPlayerTiltDegrees = 10f;
-        public const float DefaultRightPlayerTiltDegrees = 10f;
-        public const float DefaultPlayerLeanDegrees = 10f;
+        public const float DefaultLeftPlayerTiltDegrees = 6f;
+        public const float DefaultRightPlayerTiltDegrees = 6f;
+        public const float DefaultLeftPlayerLeanDegrees = 6f;
+        public const float DefaultRightPlayerLeanDegrees = -6f;
 
         public static bool DrawPath = true;
         public static float Speed = 1.25f;
@@ -35,7 +36,8 @@ namespace joyofsailing
         public static float PlayerRotationDegrees = DefaultPlayerRotationDegrees;
         public static float LeftPlayerTiltDegrees = DefaultLeftPlayerTiltDegrees;
         public static float RightPlayerTiltDegrees = DefaultRightPlayerTiltDegrees;
-        public static float PlayerLeanDegrees = DefaultPlayerLeanDegrees;
+        public static float LeftPlayerLeanDegrees = DefaultLeftPlayerLeanDegrees;
+        public static float RightPlayerLeanDegrees = DefaultRightPlayerLeanDegrees;
 
         public static float MaxClimbHeight => GameMath.Max(0f, (EndY - StartY) / ModelUnitsPerBlock);
 
@@ -53,7 +55,8 @@ namespace joyofsailing
             PlayerRotationDegrees = DefaultPlayerRotationDegrees;
             LeftPlayerTiltDegrees = DefaultLeftPlayerTiltDegrees;
             RightPlayerTiltDegrees = DefaultRightPlayerTiltDegrees;
-            PlayerLeanDegrees = DefaultPlayerLeanDegrees;
+            LeftPlayerLeanDegrees = DefaultLeftPlayerLeanDegrees;
+            RightPlayerLeanDegrees = DefaultRightPlayerLeanDegrees;
         }
     }
 }

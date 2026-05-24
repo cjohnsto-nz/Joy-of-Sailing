@@ -22,7 +22,7 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace joyofsailing
 {
-    public class EntitySailboat : EntityBoat
+    public class EntitySailboat : EntityBoat, ISeatInstSupplier
     {
         // WORLDCONFIG OPTIONS
         // joyofsailing.minwindspeed : adjusts the minimum wind speed
@@ -62,6 +62,11 @@ namespace joyofsailing
         bool canDisableAutoSculling = false;
 
         private float curRotMountAngleZ;
+
+        IMountableSeat ISeatInstSupplier.CreateSeat(IMountable mountable, string seatId, SeatConfig config)
+        {
+            return new EntitySailboatSeat(mountable, seatId, config);
+        }
 
         /*public override void OnEntityLoaded()
         {
@@ -344,8 +349,8 @@ namespace joyofsailing
                 if (isRatlineSeat)
                 {
                     hasRatlinePassenger = true;
-                    bool isClimbing = UpdateRatlineClimb(entityBoatSeat, climbDt);
-                    UpdateRatlineClimbAnimation(entityBoatSeat, isClimbing);
+                    int climbDirection = UpdateRatlineClimb(entityBoatSeat, climbDt);
+                    UpdateRatlineClimbAnimation(entityBoatSeat, climbDirection);
                 }
 
                 if (!(entityBoatSeat.Passenger is EntityPlayer))
@@ -503,18 +508,18 @@ namespace joyofsailing
                 || string.Equals(code, RightRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase);
         }
 
-        private bool UpdateRatlineClimb(EntityBoatSeat seat, float dt)
+        private int UpdateRatlineClimb(EntityBoatSeat seat, float dt)
         {
             SeatConfig config = seat.Config;
             if (config == null)
             {
-                return false;
+                return 0;
             }
 
             string seatKey = GetRatlineSeatKey(seat);
             if (seatKey == null)
             {
-                return false;
+                return 0;
             }
 
             float climbHeight = ratlineClimbBySeat.TryGetValue(seatKey, out float value) ? value : 0f;
@@ -529,10 +534,20 @@ namespace joyofsailing
             ratlineClimbBySeat[seatKey] = climbHeight;
 
             ApplyRatlineClimbTransform(seat, GetRatlineBaseRiderOffset(seat), GetRatlineBaseMountRotation(seat), climbHeight);
-            return Math.Abs(climbHeight - oldClimbHeight) > 0.0001f;
+            if (climbHeight > oldClimbHeight + 0.0001f)
+            {
+                return 1;
+            }
+
+            if (climbHeight < oldClimbHeight - 0.0001f)
+            {
+                return -1;
+            }
+
+            return 0;
         }
 
-        private static void UpdateRatlineClimbAnimation(EntityBoatSeat seat, bool isClimbing)
+        private static void UpdateRatlineClimbAnimation(EntityBoatSeat seat, int climbDirection)
         {
             IAnimationManager animManager = seat.Passenger?.AnimManager;
             if (animManager == null)
@@ -540,13 +555,80 @@ namespace joyofsailing
                 return;
             }
 
-            string activeAnimation = isClimbing ? RatlineClimbMoveAnimation : RatlineClimbIdleAnimation;
-            string inactiveAnimation = isClimbing ? RatlineClimbIdleAnimation : RatlineClimbMoveAnimation;
-
-            animManager.StopAnimation(inactiveAnimation);
-            if (!animManager.IsAnimationActive(activeAnimation))
+            if (climbDirection == 0)
             {
-                animManager.StartAnimation(activeAnimation);
+                animManager.StopAnimation(RatlineClimbMoveAnimation);
+                if (!animManager.IsAnimationActive(RatlineClimbIdleAnimation))
+                {
+                    animManager.StartAnimation(RatlineClimbIdleAnimation);
+                }
+
+                return;
+            }
+
+            animManager.StopAnimation(RatlineClimbIdleAnimation);
+            AnimationMetaData moveAnimation = GetRatlineMoveAnimation(seat);
+            if (moveAnimation == null)
+            {
+                if (!animManager.IsAnimationActive(RatlineClimbMoveAnimation))
+                {
+                    animManager.StartAnimation(RatlineClimbMoveAnimation);
+                }
+
+                return;
+            }
+
+            float speed = Math.Abs(moveAnimation.AnimationSpeed);
+            if (speed <= 0f)
+            {
+                speed = 1f;
+            }
+
+            float desiredSpeed = climbDirection > 0 ? speed : -speed;
+            if (IsRatlineMoveAnimationActive(animManager, moveAnimation, desiredSpeed))
+            {
+                return;
+            }
+
+            StopRatlineMoveAnimation(animManager, moveAnimation);
+            AnimationMetaData animationToStart = moveAnimation.Clone();
+            animationToStart.AnimationSpeed = desiredSpeed;
+            animManager.StartAnimation(animationToStart);
+        }
+
+        private static AnimationMetaData GetRatlineMoveAnimation(EntityBoatSeat seat)
+        {
+            Dictionary<string, AnimationMetaData> animationsByMetaCode = seat.Passenger?.Properties?.Client?.AnimationsByMetaCode;
+            if (animationsByMetaCode != null && animationsByMetaCode.TryGetValue(RatlineClimbMoveAnimation, out AnimationMetaData animation))
+            {
+                return animation;
+            }
+
+            return null;
+        }
+
+        private static bool IsRatlineMoveAnimationActive(IAnimationManager animManager, AnimationMetaData animation, float desiredSpeed)
+        {
+            AnimationMetaData activeAnimation = null;
+            if (!string.IsNullOrEmpty(animation.Animation))
+            {
+                animManager.ActiveAnimationsByAnimCode?.TryGetValue(animation.Animation, out activeAnimation);
+            }
+
+            if (activeAnimation == null)
+            {
+                animManager.ActiveAnimationsByAnimCode?.TryGetValue(RatlineClimbMoveAnimation, out activeAnimation);
+            }
+
+            return activeAnimation != null && Math.Sign(activeAnimation.AnimationSpeed) == Math.Sign(desiredSpeed);
+        }
+
+        private static void StopRatlineMoveAnimation(IAnimationManager animManager, AnimationMetaData animation)
+        {
+            animManager.StopAnimation(RatlineClimbMoveAnimation);
+            if (!string.IsNullOrEmpty(animation.Animation) && !string.Equals(animation.Animation, RatlineClimbMoveAnimation, StringComparison.OrdinalIgnoreCase))
+            {
+                animManager.StopAnimation(animation.Animation);
             }
         }
 
@@ -615,11 +697,12 @@ namespace joyofsailing
 
         private static Vec3f GetRatlineMountRotation(EntityBoatSeat seat, Vec3f baseRotation)
         {
-            float side = IsLeftRatlineSeat(seat) ? 1f : -1f;
+            bool isLeft = IsLeftRatlineSeat(seat);
+            float side = isLeft ? 1f : -1f;
             Vec3f rotation = Copy(baseRotation) ?? new Vec3f();
-            rotation.X += IsLeftRatlineSeat(seat) ? RatlineClimbDebugSettings.LeftPlayerTiltDegrees : RatlineClimbDebugSettings.RightPlayerTiltDegrees;
+            rotation.X += isLeft ? RatlineClimbDebugSettings.LeftPlayerTiltDegrees : RatlineClimbDebugSettings.RightPlayerTiltDegrees;
             rotation.Y += side * RatlineClimbDebugSettings.PlayerRotationDegrees;
-            rotation.Z += side * RatlineClimbDebugSettings.PlayerLeanDegrees;
+            rotation.Z += isLeft ? RatlineClimbDebugSettings.LeftPlayerLeanDegrees : -RatlineClimbDebugSettings.RightPlayerLeanDegrees;
             return rotation;
         }
 
@@ -786,6 +869,81 @@ namespace joyofsailing
             SeatConfig config = seat.Config;
             return string.Equals(config?.APName, LeftRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(config?.SelectionBox, LeftRatlineAttachmentPoint, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private class EntitySailboatSeat : EntityBoatSeat
+        {
+            public EntitySailboatSeat(IMountable mountablesupplier, string seatId, SeatConfig config)
+                : base(mountablesupplier, seatId, config)
+            {
+            }
+
+            public override EntityPos SeatPosition
+            {
+                get
+                {
+                    EntityPos pos = base.SeatPosition;
+                    if (!IsRatlineSeat(this) || Config?.MountRotation == null)
+                    {
+                        return pos;
+                    }
+
+                    EntityPos cameraPos = pos.Copy();
+                    cameraPos.Roll += Config.MountRotation.X * GameMath.DEG2RAD;
+                    cameraPos.Yaw += Config.MountRotation.Y * GameMath.DEG2RAD;
+                    cameraPos.Pitch += Config.MountRotation.Z * GameMath.DEG2RAD;
+                    return cameraPos;
+                }
+            }
+
+            public override Vec3f LocalEyePos
+            {
+                get
+                {
+                    Vec3f eyePos = base.LocalEyePos;
+                    if (!IsRatlineSeat(this) || Config?.MountRotation == null)
+                    {
+                        return eyePos;
+                    }
+
+                    Vec3f adjustedEyePos = Copy(eyePos) ?? new Vec3f();
+                    RotateModelVectorX(adjustedEyePos, Config.MountRotation.X);
+                    RotateModelVectorZ(adjustedEyePos, IsLeftRatlineSeat(this) ? Config.MountRotation.Z : -Config.MountRotation.Z);
+                    return adjustedEyePos;
+                }
+            }
+
+            public override Matrixf RenderTransform
+            {
+                get
+                {
+                    if (!IsRatlineSeat(this) || IsLeftRatlineSeat(this) || Config?.MountRotation == null)
+                    {
+                        return base.RenderTransform;
+                    }
+
+#pragma warning disable CS0618
+                    if (Config.MountOffset != null)
+                    {
+                        return base.RenderTransform;
+                    }
+#pragma warning restore CS0618
+
+                    Matrixf transform = new Matrixf();
+                    transform.Identity();
+
+                    Entity passenger = Passenger;
+                    float passengerSize = passenger?.Properties?.Client?.Size ?? 1f;
+                    if (Config.RiderOffset != null && passengerSize != 1f)
+                    {
+                        transform.Translate(Config.RiderOffset.Clone().Mul(passengerSize - 1f));
+                    }
+
+                    transform.RotateX(Config.MountRotation.X * GameMath.DEG2RAD);
+                    transform.RotateZ(-Config.MountRotation.Z * GameMath.DEG2RAD);
+                    return transform;
+                }
+            }
         }
 
         public void updateWind()
