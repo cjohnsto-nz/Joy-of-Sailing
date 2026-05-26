@@ -1018,6 +1018,7 @@ namespace joyofsailing
                 + RatlineClimbDebugSettings.EnablePlayerTilt + " / "
                 + RatlineClimbDebugSettings.EnablePlayerYaw + " / "
                 + RatlineClimbDebugSettings.EnablePlayerLean);
+            left.AppendLine("Eye model transform: " + RatlineClimbDebugSettings.EnableEyeModelTransform);
             left.AppendLine("Seat path/pose/direct FB experiments: disabled");
 
             left.AppendLine();
@@ -1115,7 +1116,7 @@ namespace joyofsailing
             right.AppendLine("SeatPosition XYZ is direct world path lock.");
             right.AppendLine("SeatPosition yaw: boat yaw only; model yaw stays in RenderTransform.");
             right.AppendLine("SeatPosition roll/pitch are zeroed.");
-            right.AppendLine("LocalEyePos: base seat eye position + debug eye XYZ.");
+            right.AppendLine("LocalEyePos: model transform of base eye position + debug eye XYZ.");
             right.AppendLine("RenderTransform: model offset + path frame * model correction * inverse(seat frame).");
             right.AppendLine("Old seat/eye/direct-FB settings are not applied.");
         }
@@ -1822,6 +1823,33 @@ namespace joyofsailing
             return GetRatlineModelFrame(seat)?.RenderLocalMatrix;
         }
 
+        private Vec3f GetRatlineLocalEyePos(EntityBoatSeat seat, Vec3f baseEyePos)
+        {
+            Vec3f eyePos = Copy(baseEyePos) ?? new Vec3f();
+            eyePos.Add(GetDebugEyeOffset());
+
+            if (!RatlineClimbDebugSettings.EnableEyeModelTransform)
+            {
+                return eyePos;
+            }
+
+            Matrixf transform = new Matrixf();
+            transform.Identity();
+            transform.Translate(GetDebugModelOffset());
+            transform.Mul(GetRatlineRenderLocalModelMatrix(seat) ?? BuildRatlineModelCorrectionFallback(seat));
+
+            return transform.TransformVector(new Vec4f(eyePos.X, eyePos.Y, eyePos.Z, 1f)).XYZ;
+        }
+
+        private static Matrixf BuildRatlineModelCorrectionFallback(EntityBoatSeat seat)
+        {
+            Matrixf transform = new Matrixf();
+            transform.Identity();
+            transform.RotateDeg(GetRatlineMountRotation(seat, GetRatlineBaseMountRotation(seat)));
+            transform.RotateDeg(GetDebugModelRotationDegrees());
+            return transform;
+        }
+
         private class RatlineModelFrame
         {
             public Vec3d StartPosition;
@@ -1966,16 +1994,12 @@ namespace joyofsailing
             {
                 get
                 {
-                    if (!IsRatlineSeat(this))
+                    if (!IsRatlineSeat(this) || Entity is not EntitySailboat sailboat)
                     {
                         return base.LocalEyePos;
                     }
 
-                    Vec3f pos = Copy(base.LocalEyePos) ?? new Vec3f();
-                    pos.X += RatlineClimbDebugSettings.DebugEyeOffsetX;
-                    pos.Y += RatlineClimbDebugSettings.DebugEyeOffsetY;
-                    pos.Z += RatlineClimbDebugSettings.DebugEyeOffsetZ;
-                    return pos;
+                    return sailboat.GetRatlineLocalEyePos(this, base.LocalEyePos);
                 }
             }
 
@@ -2003,15 +2027,6 @@ namespace joyofsailing
                     transform.Mul(sailboat.GetRatlineRenderLocalModelMatrix(this) ?? BuildRatlineModelCorrectionFallback(this));
                     return transform;
                 }
-            }
-
-            private static Matrixf BuildRatlineModelCorrectionFallback(EntityBoatSeat seat)
-            {
-                Matrixf transform = new Matrixf();
-                transform.Identity();
-                transform.RotateDeg(GetRatlineMountRotation(seat, GetRatlineBaseMountRotation(seat)));
-                transform.RotateDeg(GetDebugModelRotationDegrees());
-                return transform;
             }
         }
 

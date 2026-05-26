@@ -102,6 +102,8 @@ namespace joyofsailing
                     .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerYaw = on, ToggleSwitchBounds(4), "enablePlayerYaw")
                     .AddStaticText("Use Model Lean", CairoFont.WhiteSmallText(), ToggleLabelBounds(5))
                     .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerLean = on, ToggleSwitchBounds(5), "enablePlayerLean")
+                    .AddStaticText("Use Eye Sway", CairoFont.WhiteSmallText(), ToggleLabelBounds(6))
+                    .AddSwitch(on => RatlineClimbDebugSettings.EnableEyeModelTransform = on, ToggleSwitchBounds(6), "enableEyeModelTransform")
                     .AddStaticText("Ratline Steer", CairoFont.WhiteSmallText(), BoatLabelBounds(0))
                     .AddSwitch(on => RatlineClimbDebugSettings.EnableRatlineSteering = on, BoatSwitchBounds(0), "enableRatlineSteering")
                     .AddStaticText("Steer Mul", CairoFont.WhiteSmallText(), BoatLabelBounds(1))
@@ -282,6 +284,7 @@ namespace joyofsailing
             SingleComposer.GetSwitch("enablePlayerTilt").SetValue(RatlineClimbDebugSettings.EnablePlayerTilt);
             SingleComposer.GetSwitch("enablePlayerYaw").SetValue(RatlineClimbDebugSettings.EnablePlayerYaw);
             SingleComposer.GetSwitch("enablePlayerLean").SetValue(RatlineClimbDebugSettings.EnablePlayerLean);
+            SingleComposer.GetSwitch("enableEyeModelTransform").SetValue(RatlineClimbDebugSettings.EnableEyeModelTransform);
             SingleComposer.GetSwitch("enableRatlineSteering").SetValue(RatlineClimbDebugSettings.EnableRatlineSteering);
             SetInput("ratlineSteeringMultiplier", RatlineClimbDebugSettings.RatlineSteeringMultiplier);
             SingleComposer.GetSwitch("overrideBoatSway").SetValue(RatlineClimbDebugSettings.OverrideBoatSway);

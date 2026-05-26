@@ -22,10 +22,10 @@ namespace joyofsailing
         public const float DefaultPlayerRotationDegrees = 270f;
         public const float DefaultRightPlayerRotationOffsetDegrees = 0f;
         public const float DefaultLeftPlayerTiltDegrees = 3f;
-        public const float DefaultRightPlayerTiltDegrees = 6f;
+        public const float DefaultRightPlayerTiltDegrees = 3f;
         public const float DefaultLeftPlayerLeanDegrees = 0f;
         public const float DefaultRightPlayerLeanDegrees = -6f;
-        public const float DefaultPlayerOffsetX = 0.4f;
+        public const float DefaultPlayerOffsetX = 0.3f;
         public const float DefaultPlayerOffsetY = 0f;
         public const float DefaultPlayerOffsetZ = -0.4f;
         public const float DefaultMastDebugXOffset = 0.25f;
@@ -53,6 +53,7 @@ namespace joyofsailing
         public const bool DefaultEnableEyeConfigTilt = true;
         public const bool DefaultEnableEyeConfigLean = true;
         public const bool DefaultEnableEyeFrontBackSway = false;
+        public const bool DefaultEnableEyeModelTransform = true;
         public const bool DefaultEnableModelFrontBackSway = false;
         public const bool DefaultEnableRatlineSteering = false;
         public const float DefaultRatlineSteeringMultiplier = 1f;
@@ -132,6 +133,7 @@ namespace joyofsailing
         public static bool EnableEyeConfigTilt = DefaultEnableEyeConfigTilt;
         public static bool EnableEyeConfigLean = DefaultEnableEyeConfigLean;
         public static bool EnableEyeFrontBackSway = DefaultEnableEyeFrontBackSway;
+        public static bool EnableEyeModelTransform = DefaultEnableEyeModelTransform;
         public static bool EnableModelFrontBackSway = DefaultEnableModelFrontBackSway;
         public static bool EnableRatlineSteering = DefaultEnableRatlineSteering;
         public static float RatlineSteeringMultiplier = DefaultRatlineSteeringMultiplier;
@@ -215,6 +217,7 @@ namespace joyofsailing
             EnableEyeConfigTilt = DefaultEnableEyeConfigTilt;
             EnableEyeConfigLean = DefaultEnableEyeConfigLean;
             EnableEyeFrontBackSway = DefaultEnableEyeFrontBackSway;
+            EnableEyeModelTransform = DefaultEnableEyeModelTransform;
             EnableModelFrontBackSway = DefaultEnableModelFrontBackSway;
             EnableRatlineSteering = DefaultEnableRatlineSteering;
             RatlineSteeringMultiplier = DefaultRatlineSteeringMultiplier;
