@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.Reflection;
+using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -11,6 +13,7 @@ namespace joyofsailing
     {
         private GuiDialogSailboatDebug debugDialog;
         private GuiDialogSailboatTransformDebug transformDebugDialog;
+        private Harmony harmony;
 
         // Called on server and client
         // Useful for registering block/entity classes on both sides
@@ -38,6 +41,29 @@ namespace joyofsailing
             api.Input.RegisterHotKey("joyofsailingratlinedebug", "Joy of Sailing: Ratline Debug", GlKeys.F9, HotkeyType.GUIOrOtherControls);
             api.Input.SetHotKeyHandler("joyofsailingratlinedebug", OnToggleRatlineDebug);
 
+            PatchRatlineThirdPersonHeadFollow(api);
+        }
+
+        private void PatchRatlineThirdPersonHeadFollow(ICoreClientAPI api)
+        {
+            harmony = new Harmony(Mod.Info.ModID + ".ratlineheadcamera");
+
+            MethodInfo adjustHeadAngles = AccessTools.Method(
+                typeof(PlayerHeadController),
+                "AdjustHeadAngles",
+                new[] { typeof(EnumCameraMode), typeof(float) }
+            );
+
+            if (adjustHeadAngles == null)
+            {
+                api.Logger.Warning("Joy of Sailing: could not patch PlayerHeadController.AdjustHeadAngles; ratline third-person head follow is disabled.");
+                return;
+            }
+
+            harmony.Patch(
+                adjustHeadAngles,
+                prefix: new HarmonyMethod(typeof(RatlineThirdPersonHeadCameraPatch), nameof(RatlineThirdPersonHeadCameraPatch.Prefix))
+            );
         }
 
         private bool OnToggleRatlineDebug(KeyCombination keyCombination)
@@ -57,6 +83,8 @@ namespace joyofsailing
 
         public override void Dispose()
         {
+            harmony?.UnpatchAll(harmony.Id);
+            harmony = null;
             base.Dispose();
         }
     }

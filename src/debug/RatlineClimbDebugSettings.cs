@@ -61,6 +61,8 @@ namespace joyofsailing
         public const float DefaultRatlineCameraYawLimitDegrees = 270f;
         public const float DefaultRightRatlineCameraYawOffsetDegrees = 90f;
         public const float DefaultLeftRatlineCameraYawOffsetDegrees = 270f;
+        public const bool DefaultEnableThirdPersonHeadCameraFollow = true;
+        public const float DefaultThirdPersonHeadYawLimitDegrees = 120f;
         public const bool DefaultOverrideBoatSway = false;
         public const float DefaultBoatSwayXDegrees = 0f;
         public const float DefaultBoatSwayYDegrees = 0f;
@@ -141,6 +143,8 @@ namespace joyofsailing
         public static float RatlineCameraYawLimitDegrees = DefaultRatlineCameraYawLimitDegrees;
         public static float RightRatlineCameraYawOffsetDegrees = DefaultRightRatlineCameraYawOffsetDegrees;
         public static float LeftRatlineCameraYawOffsetDegrees = DefaultLeftRatlineCameraYawOffsetDegrees;
+        public static bool EnableThirdPersonHeadCameraFollow = DefaultEnableThirdPersonHeadCameraFollow;
+        public static float ThirdPersonHeadYawLimitDegrees = DefaultThirdPersonHeadYawLimitDegrees;
         public static bool OverrideBoatSway = DefaultOverrideBoatSway;
         public static float BoatSwayXDegrees = DefaultBoatSwayXDegrees;
         public static float BoatSwayYDegrees = DefaultBoatSwayYDegrees;
@@ -225,6 +229,8 @@ namespace joyofsailing
             RatlineCameraYawLimitDegrees = DefaultRatlineCameraYawLimitDegrees;
             RightRatlineCameraYawOffsetDegrees = DefaultRightRatlineCameraYawOffsetDegrees;
             LeftRatlineCameraYawOffsetDegrees = DefaultLeftRatlineCameraYawOffsetDegrees;
+            EnableThirdPersonHeadCameraFollow = DefaultEnableThirdPersonHeadCameraFollow;
+            ThirdPersonHeadYawLimitDegrees = DefaultThirdPersonHeadYawLimitDegrees;
             OverrideBoatSway = DefaultOverrideBoatSway;
             BoatSwayXDegrees = DefaultBoatSwayXDegrees;
             BoatSwayYDegrees = DefaultBoatSwayYDegrees;

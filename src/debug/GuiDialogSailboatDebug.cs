@@ -104,6 +104,8 @@ namespace joyofsailing
                     .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerLean = on, ToggleSwitchBounds(5), "enablePlayerLean")
                     .AddStaticText("Use Eye Sway", CairoFont.WhiteSmallText(), ToggleLabelBounds(6))
                     .AddSwitch(on => RatlineClimbDebugSettings.EnableEyeModelTransform = on, ToggleSwitchBounds(6), "enableEyeModelTransform")
+                    .AddStaticText("TP Head Camera", CairoFont.WhiteSmallText(), ToggleLabelBounds(7))
+                    .AddSwitch(on => RatlineClimbDebugSettings.EnableThirdPersonHeadCameraFollow = on, ToggleSwitchBounds(7), "enableThirdPersonHeadCameraFollow")
                     .AddStaticText("Ratline Steer", CairoFont.WhiteSmallText(), BoatLabelBounds(0))
                     .AddSwitch(on => RatlineClimbDebugSettings.EnableRatlineSteering = on, BoatSwitchBounds(0), "enableRatlineSteering")
                     .AddStaticText("Steer Mul", CairoFont.WhiteSmallText(), BoatLabelBounds(1))
@@ -148,6 +150,8 @@ namespace joyofsailing
                     .AddNumberInput(BoatInputBounds(20), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugEyeOffsetY = v), CairoFont.TextInput(), "debugEyeOffsetY")
                     .AddStaticText("Eye Z", CairoFont.WhiteSmallText(), BoatLabelBounds(21))
                     .AddNumberInput(BoatInputBounds(21), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugEyeOffsetZ = v), CairoFont.TextInput(), "debugEyeOffsetZ")
+                    .AddStaticText("Head Yaw Lim", CairoFont.WhiteSmallText(), BoatLabelBounds(22))
+                    .AddNumberInput(BoatInputBounds(22), value => SetFloat(value, v => RatlineClimbDebugSettings.ThirdPersonHeadYawLimitDegrees = GameMath.Max(0f, v)), CairoFont.TextInput(), "thirdPersonHeadYawLimit")
                 .EndChildElements()
                 .Compose();
 
@@ -179,6 +183,7 @@ namespace joyofsailing
             SetInputInterval("debugEyeOffsetX", 0.1f);
             SetInputInterval("debugEyeOffsetY", 0.1f);
             SetInputInterval("debugEyeOffsetZ", 0.1f);
+            SetInputInterval("thirdPersonHeadYawLimit", 5f);
         }
 
         private void SetInputInterval(string key, float interval)
@@ -285,6 +290,7 @@ namespace joyofsailing
             SingleComposer.GetSwitch("enablePlayerYaw").SetValue(RatlineClimbDebugSettings.EnablePlayerYaw);
             SingleComposer.GetSwitch("enablePlayerLean").SetValue(RatlineClimbDebugSettings.EnablePlayerLean);
             SingleComposer.GetSwitch("enableEyeModelTransform").SetValue(RatlineClimbDebugSettings.EnableEyeModelTransform);
+            SingleComposer.GetSwitch("enableThirdPersonHeadCameraFollow").SetValue(RatlineClimbDebugSettings.EnableThirdPersonHeadCameraFollow);
             SingleComposer.GetSwitch("enableRatlineSteering").SetValue(RatlineClimbDebugSettings.EnableRatlineSteering);
             SetInput("ratlineSteeringMultiplier", RatlineClimbDebugSettings.RatlineSteeringMultiplier);
             SingleComposer.GetSwitch("overrideBoatSway").SetValue(RatlineClimbDebugSettings.OverrideBoatSway);
@@ -307,6 +313,7 @@ namespace joyofsailing
             SetInput("debugEyeOffsetX", RatlineClimbDebugSettings.DebugEyeOffsetX);
             SetInput("debugEyeOffsetY", RatlineClimbDebugSettings.DebugEyeOffsetY);
             SetInput("debugEyeOffsetZ", RatlineClimbDebugSettings.DebugEyeOffsetZ);
+            SetInput("thirdPersonHeadYawLimit", RatlineClimbDebugSettings.ThirdPersonHeadYawLimitDegrees);
         }
 
         private void SetInput(string key, float value)
