@@ -404,8 +404,18 @@ namespace joyofsailing
                     EntityPlayer entityPlayer = entityBoatSeat.Passenger as EntityPlayer;
                     if (entityPlayer != null)
                     {
-                        entityPlayer.BodyYawLimits = new AngleConstraint(Pos.Yaw + entityBoatSeat.Config.MountRotation.Y * (MathF.PI / 180f), entityBoatSeat.Config.BodyYawLimit.Value);
-                        entityPlayer.HeadYawLimits = new AngleConstraint(Pos.Yaw + entityBoatSeat.Config.MountRotation.Y * (MathF.PI / 180f), MathF.PI / 2f);
+                        float yawCenter = Pos.Yaw + entityBoatSeat.Config.MountRotation.Y * GameMath.DEG2RAD;
+                        float bodyYawLimit = isRatlineSeat
+                            ? GetYawHalfRangeRadians(RatlineClimbDebugSettings.RatlineBodyYawLimitDegrees)
+                            : entityBoatSeat.Config.BodyYawLimit.Value;
+                        float headYawCenter = isRatlineSeat
+                            ? (float)NormalizeAngleRad(yawCenter + GetRatlineCameraYawOffsetDegrees(entityBoatSeat) * GameMath.DEG2RAD)
+                            : yawCenter;
+                        float headYawLimit = isRatlineSeat
+                            ? GetYawHalfRangeRadians(RatlineClimbDebugSettings.RatlineCameraYawLimitDegrees)
+                            : MathF.PI / 2f;
+                        entityPlayer.BodyYawLimits = new AngleConstraint(yawCenter, bodyYawLimit);
+                        entityPlayer.HeadYawLimits = new AngleConstraint(headYawCenter, headYawLimit);
                     }
                 }
 
@@ -799,7 +809,6 @@ namespace joyofsailing
         private static Vec3f GetRatlineMountRotation(EntityBoatSeat seat, Vec3f baseRotation)
         {
             bool isLeft = IsLeftRatlineSeat(seat);
-            float side = isLeft ? 1f : -1f;
             Vec3f rotation = Copy(baseRotation) ?? new Vec3f();
             if (RatlineClimbDebugSettings.EnablePlayerTilt)
             {
@@ -808,7 +817,7 @@ namespace joyofsailing
 
             if (RatlineClimbDebugSettings.EnablePlayerYaw)
             {
-                rotation.Y += side * RatlineClimbDebugSettings.PlayerRotationDegrees;
+                rotation.Y += GetRatlinePlayerYawDegrees(seat);
             }
 
             if (RatlineClimbDebugSettings.EnablePlayerLean)
@@ -819,10 +828,21 @@ namespace joyofsailing
             return rotation;
         }
 
+        private static float GetRatlinePlayerYawDegrees(EntityBoatSeat seat)
+        {
+            float yaw = RatlineClimbDebugSettings.PlayerRotationDegrees;
+            if (!IsLeftRatlineSeat(seat))
+            {
+                yaw += RatlineClimbDebugSettings.RightPlayerRotationOffsetDegrees;
+            }
+
+            return yaw;
+        }
+
         private void ApplyRatlineClimbTransform(EntityBoatSeat seat, Vec3f baseOffset, Vec3f baseRotation, float climbHeight)
         {
             SetSeatOffset(seat.Config, Copy(baseOffset) ?? new Vec3f());
-            seat.Config.MountRotation = GetRatlineMountRotation(seat, baseRotation);
+            seat.Config.MountRotation = Copy(baseRotation) ?? new Vec3f();
         }
 
         private static Vec3f GetRatlinePlayerOffset(EntityBoatSeat seat)
@@ -1029,14 +1049,18 @@ namespace joyofsailing
             right.AppendLine("Base mount rotation: " + Vec(baseRotation));
             right.AppendLine("Config MountRotation: " + Vec(mountRotation));
             right.AppendLine("Player tilt setting: " + F(isLeft ? RatlineClimbDebugSettings.LeftPlayerTiltDegrees : RatlineClimbDebugSettings.RightPlayerTiltDegrees));
-            right.AppendLine("Player yaw setting: " + F((isLeft ? 1f : -1f) * RatlineClimbDebugSettings.PlayerRotationDegrees));
+            right.AppendLine("Player yaw setting: " + F(GetRatlinePlayerYawDegrees(seat)));
+            right.AppendLine("Right yaw offset: " + F(RatlineClimbDebugSettings.RightPlayerRotationOffsetDegrees));
             right.AppendLine("Player lean setting: " + F(isLeft ? RatlineClimbDebugSettings.LeftPlayerLeanDegrees : -RatlineClimbDebugSettings.RightPlayerLeanDegrees));
             right.AppendLine("Debug seat rotation: " + Vec(debugSeatRotation) + " (not applied)");
             right.AppendLine("Debug angle mode: " + debugAngleMode + " (not applied)");
             right.AppendLine("Patched player roll/yaw: removed");
-            right.AppendLine("Debug eye offset: " + Vec(debugEyeOffset) + " (not applied)");
+            right.AppendLine("Debug eye offset: " + Vec(debugEyeOffset));
             right.AppendLine("Debug model offset: " + Vec(debugModelOffset));
             right.AppendLine("Debug model rotation: " + Vec(debugModelRotation));
+            right.AppendLine("Ratline body yaw limit: " + F(RatlineClimbDebugSettings.RatlineBodyYawLimitDegrees) + " deg total");
+            right.AppendLine("Ratline camera yaw limit: " + F(RatlineClimbDebugSettings.RatlineCameraYawLimitDegrees) + " deg total");
+            right.AppendLine("Ratline camera yaw offset: " + F(GetRatlineCameraYawOffsetDegrees(seat)) + " deg");
 
             right.AppendLine();
             right.AppendLine("--- Sway Rotation Inputs ---");
@@ -1089,9 +1113,9 @@ namespace joyofsailing
             right.AppendLine();
             right.AppendLine("--- Eye / Model Operations ---");
             right.AppendLine("SeatPosition XYZ is direct world path lock.");
-            right.AppendLine("SeatPosition yaw: boat yaw + config yaw.");
+            right.AppendLine("SeatPosition yaw: boat yaw only; model yaw stays in RenderTransform.");
             right.AppendLine("SeatPosition roll/pitch are zeroed.");
-            right.AppendLine("LocalEyePos: vanilla/base seat eye position.");
+            right.AppendLine("LocalEyePos: base seat eye position + debug eye XYZ.");
             right.AppendLine("RenderTransform: model offset + path frame * model correction * inverse(seat frame).");
             right.AppendLine("Old seat/eye/direct-FB settings are not applied.");
         }
@@ -1300,6 +1324,18 @@ namespace joyofsailing
             return inverted ? -1f : 1f;
         }
 
+        private static float GetYawHalfRangeRadians(float totalRangeDegrees)
+        {
+            return Math.Clamp(totalRangeDegrees, 0f, 360f) * 0.5f * GameMath.DEG2RAD;
+        }
+
+        private static float GetRatlineCameraYawOffsetDegrees(EntityBoatSeat seat)
+        {
+            return IsLeftRatlineSeat(seat)
+                ? RatlineClimbDebugSettings.LeftRatlineCameraYawOffsetDegrees
+                : RatlineClimbDebugSettings.RightRatlineCameraYawOffsetDegrees;
+        }
+
         private void DrawRatlineDebugPath(ICoreClientAPI capi, EntityBoatSeat seat, int color)
         {
             Vec3d startPos = GetRatlineTriangleWorldPositionAt(seat, RatlineClimbMinHeight);
@@ -1431,16 +1467,9 @@ namespace joyofsailing
 
         private float GetRatlineSeatYaw(EntityBoatSeat seat)
         {
-            float yaw = RatlineClimbDebugSettings.OverrideBoatYaw
+            return RatlineClimbDebugSettings.OverrideBoatYaw
                 ? RatlineClimbDebugSettings.BoatYawDegrees * GameMath.DEG2RAD
                 : Pos.Yaw;
-
-            if (seat.Config?.MountRotation != null)
-            {
-                yaw += seat.Config.MountRotation.Y * GameMath.DEG2RAD;
-            }
-
-            return yaw;
         }
 
         private static double NormalizeAngleRad(double angle)
@@ -1942,7 +1971,11 @@ namespace joyofsailing
                         return base.LocalEyePos;
                     }
 
-                    return base.LocalEyePos;
+                    Vec3f pos = Copy(base.LocalEyePos) ?? new Vec3f();
+                    pos.X += RatlineClimbDebugSettings.DebugEyeOffsetX;
+                    pos.Y += RatlineClimbDebugSettings.DebugEyeOffsetY;
+                    pos.Z += RatlineClimbDebugSettings.DebugEyeOffsetZ;
+                    return pos;
                 }
             }
 

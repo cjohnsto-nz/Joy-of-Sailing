@@ -18,15 +18,16 @@ namespace joyofsailing
         public const float DefaultEndY = 60f;
         public const float DefaultTriangleHeight = 90f;
         public const float DefaultTiltDegrees = 0f;
-        public const float DefaultLeanDegrees = 7f;
-        public const float DefaultPlayerRotationDegrees = 135f;
-        public const float DefaultLeftPlayerTiltDegrees = 6f;
+        public const float DefaultLeanDegrees = 20f;
+        public const float DefaultPlayerRotationDegrees = 270f;
+        public const float DefaultRightPlayerRotationOffsetDegrees = 0f;
+        public const float DefaultLeftPlayerTiltDegrees = 3f;
         public const float DefaultRightPlayerTiltDegrees = 6f;
         public const float DefaultLeftPlayerLeanDegrees = 0f;
         public const float DefaultRightPlayerLeanDegrees = -6f;
-        public const float DefaultPlayerOffsetX = 1.1f;
+        public const float DefaultPlayerOffsetX = 0.4f;
         public const float DefaultPlayerOffsetY = 0f;
-        public const float DefaultPlayerOffsetZ = -1.2f;
+        public const float DefaultPlayerOffsetZ = -0.4f;
         public const float DefaultMastDebugXOffset = 0.25f;
         public const bool DefaultInvertSwayX = false;
         public const bool DefaultInvertSwayY = false;
@@ -55,6 +56,10 @@ namespace joyofsailing
         public const bool DefaultEnableModelFrontBackSway = false;
         public const bool DefaultEnableRatlineSteering = false;
         public const float DefaultRatlineSteeringMultiplier = 1f;
+        public const float DefaultRatlineBodyYawLimitDegrees = 0f;
+        public const float DefaultRatlineCameraYawLimitDegrees = 270f;
+        public const float DefaultRightRatlineCameraYawOffsetDegrees = 90f;
+        public const float DefaultLeftRatlineCameraYawOffsetDegrees = 270f;
         public const bool DefaultOverrideBoatSway = false;
         public const float DefaultBoatSwayXDegrees = 0f;
         public const float DefaultBoatSwayYDegrees = 0f;
@@ -83,7 +88,7 @@ namespace joyofsailing
         public const float DefaultDebugModelYawDegrees = 0f;
         public const float DefaultDebugModelPitchDegrees = 0f;
 
-        public static bool DrawPath = true;
+        public static bool DrawPath = false;
         public static float Speed = 1.25f;
         public static float PathX = DefaultPathX;
         public static float PathCenterZ = DefaultPathCenterZ;
@@ -94,6 +99,7 @@ namespace joyofsailing
         public static float TiltDegrees = DefaultTiltDegrees;
         public static float LeanDegrees = DefaultLeanDegrees;
         public static float PlayerRotationDegrees = DefaultPlayerRotationDegrees;
+        public static float RightPlayerRotationOffsetDegrees = DefaultRightPlayerRotationOffsetDegrees;
         public static float LeftPlayerTiltDegrees = DefaultLeftPlayerTiltDegrees;
         public static float RightPlayerTiltDegrees = DefaultRightPlayerTiltDegrees;
         public static float LeftPlayerLeanDegrees = DefaultLeftPlayerLeanDegrees;
@@ -129,6 +135,10 @@ namespace joyofsailing
         public static bool EnableModelFrontBackSway = DefaultEnableModelFrontBackSway;
         public static bool EnableRatlineSteering = DefaultEnableRatlineSteering;
         public static float RatlineSteeringMultiplier = DefaultRatlineSteeringMultiplier;
+        public static float RatlineBodyYawLimitDegrees = DefaultRatlineBodyYawLimitDegrees;
+        public static float RatlineCameraYawLimitDegrees = DefaultRatlineCameraYawLimitDegrees;
+        public static float RightRatlineCameraYawOffsetDegrees = DefaultRightRatlineCameraYawOffsetDegrees;
+        public static float LeftRatlineCameraYawOffsetDegrees = DefaultLeftRatlineCameraYawOffsetDegrees;
         public static bool OverrideBoatSway = DefaultOverrideBoatSway;
         public static float BoatSwayXDegrees = DefaultBoatSwayXDegrees;
         public static float BoatSwayYDegrees = DefaultBoatSwayYDegrees;
@@ -161,7 +171,7 @@ namespace joyofsailing
 
         public static void ResetRuntimeToDefaults()
         {
-            DrawPath = true;
+            DrawPath = false;
             Speed = 1.25f;
             PathX = DefaultPathX;
             PathCenterZ = DefaultPathCenterZ;
@@ -172,6 +182,7 @@ namespace joyofsailing
             TiltDegrees = DefaultTiltDegrees;
             LeanDegrees = DefaultLeanDegrees;
             PlayerRotationDegrees = DefaultPlayerRotationDegrees;
+            RightPlayerRotationOffsetDegrees = DefaultRightPlayerRotationOffsetDegrees;
             LeftPlayerTiltDegrees = DefaultLeftPlayerTiltDegrees;
             RightPlayerTiltDegrees = DefaultRightPlayerTiltDegrees;
             LeftPlayerLeanDegrees = DefaultLeftPlayerLeanDegrees;
@@ -207,6 +218,10 @@ namespace joyofsailing
             EnableModelFrontBackSway = DefaultEnableModelFrontBackSway;
             EnableRatlineSteering = DefaultEnableRatlineSteering;
             RatlineSteeringMultiplier = DefaultRatlineSteeringMultiplier;
+            RatlineBodyYawLimitDegrees = DefaultRatlineBodyYawLimitDegrees;
+            RatlineCameraYawLimitDegrees = DefaultRatlineCameraYawLimitDegrees;
+            RightRatlineCameraYawOffsetDegrees = DefaultRightRatlineCameraYawOffsetDegrees;
+            LeftRatlineCameraYawOffsetDegrees = DefaultLeftRatlineCameraYawOffsetDegrees;
             OverrideBoatSway = DefaultOverrideBoatSway;
             BoatSwayXDegrees = DefaultBoatSwayXDegrees;
             BoatSwayYDegrees = DefaultBoatSwayYDegrees;

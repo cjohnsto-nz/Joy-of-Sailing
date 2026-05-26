@@ -62,32 +62,34 @@ namespace joyofsailing
                     .AddNumberInput(InputBounds(9), value => SetFloat(value, v => RatlineClimbDebugSettings.LeanDegrees = v), CairoFont.TextInput(), "lean")
                     .AddStaticText("Player Rot", CairoFont.WhiteSmallText(), LabelBounds(10))
                     .AddNumberInput(InputBounds(10), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerRotationDegrees = v), CairoFont.TextInput(), "playerRotation")
-                    .AddStaticText("Left Tilt", CairoFont.WhiteSmallText(), LabelBounds(11))
-                    .AddNumberInput(InputBounds(11), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPlayerTiltDegrees = v), CairoFont.TextInput(), "leftPlayerTilt")
-                    .AddStaticText("Right Tilt", CairoFont.WhiteSmallText(), LabelBounds(12))
-                    .AddNumberInput(InputBounds(12), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerTiltDegrees = v), CairoFont.TextInput(), "rightPlayerTilt")
-                    .AddStaticText("Left Lean", CairoFont.WhiteSmallText(), LabelBounds(13))
-                    .AddNumberInput(InputBounds(13), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPlayerLeanDegrees = v), CairoFont.TextInput(), "leftPlayerLean")
-                    .AddStaticText("Right Lean", CairoFont.WhiteSmallText(), LabelBounds(14))
-                    .AddNumberInput(InputBounds(14), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerLeanDegrees = v), CairoFont.TextInput(), "rightPlayerLean")
-                    .AddStaticText("Player X", CairoFont.WhiteSmallText(), LabelBounds(15))
-                    .AddNumberInput(InputBounds(15), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetX = v), CairoFont.TextInput(), "playerOffsetX")
-                    .AddStaticText("Player Y", CairoFont.WhiteSmallText(), LabelBounds(16))
-                    .AddNumberInput(InputBounds(16), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetY = v), CairoFont.TextInput(), "playerOffsetY")
-                    .AddStaticText("Player Z", CairoFont.WhiteSmallText(), LabelBounds(17))
-                    .AddNumberInput(InputBounds(17), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetZ = v), CairoFont.TextInput(), "playerOffsetZ")
-                    .AddStaticText("Mast X", CairoFont.WhiteSmallText(), LabelBounds(18))
-                    .AddNumberInput(InputBounds(18), value => SetFloat(value, v => RatlineClimbDebugSettings.MastDebugXOffset = v), CairoFont.TextInput(), "mastX")
-                    .AddStaticText("Invert X", CairoFont.WhiteSmallText(), LabelBounds(19))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayX = on, ElementBounds.Fixed(InputX, RowY(19) - 4, 30, 30), "invertSwayX")
-                    .AddStaticText("Invert Y", CairoFont.WhiteSmallText(), LabelBounds(20))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayY = on, ElementBounds.Fixed(InputX, RowY(20) - 4, 30, 30), "invertSwayY")
-                    .AddStaticText("Invert Z", CairoFont.WhiteSmallText(), LabelBounds(21))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayZ = on, ElementBounds.Fixed(InputX, RowY(21) - 4, 30, 30), "invertSwayZ")
-                    .AddStaticText("Invert Swivel", CairoFont.WhiteSmallText(), LabelBounds(22))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwaySwivel = on, ElementBounds.Fixed(InputX, RowY(22) - 4, 30, 30), "invertSwaySwivel")
-                    .AddButton("Reset", OnReset, ElementBounds.Fixed(LabelX, RowY(24) + 6, 112, 32))
-                    .AddButton("Values", OnValues, ElementBounds.Fixed(LabelX + 126, RowY(24) + 6, 112, 32))
+                    .AddStaticText("Right Rot Off", CairoFont.WhiteSmallText(), LabelBounds(11))
+                    .AddNumberInput(InputBounds(11), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerRotationOffsetDegrees = v), CairoFont.TextInput(), "rightPlayerRotationOffset")
+                    .AddStaticText("Left Tilt", CairoFont.WhiteSmallText(), LabelBounds(12))
+                    .AddNumberInput(InputBounds(12), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPlayerTiltDegrees = v), CairoFont.TextInput(), "leftPlayerTilt")
+                    .AddStaticText("Right Tilt", CairoFont.WhiteSmallText(), LabelBounds(13))
+                    .AddNumberInput(InputBounds(13), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerTiltDegrees = v), CairoFont.TextInput(), "rightPlayerTilt")
+                    .AddStaticText("Left Lean", CairoFont.WhiteSmallText(), LabelBounds(14))
+                    .AddNumberInput(InputBounds(14), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftPlayerLeanDegrees = v), CairoFont.TextInput(), "leftPlayerLean")
+                    .AddStaticText("Right Lean", CairoFont.WhiteSmallText(), LabelBounds(15))
+                    .AddNumberInput(InputBounds(15), value => SetFloat(value, v => RatlineClimbDebugSettings.RightPlayerLeanDegrees = v), CairoFont.TextInput(), "rightPlayerLean")
+                    .AddStaticText("Player X", CairoFont.WhiteSmallText(), LabelBounds(16))
+                    .AddNumberInput(InputBounds(16), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetX = v), CairoFont.TextInput(), "playerOffsetX")
+                    .AddStaticText("Player Y", CairoFont.WhiteSmallText(), LabelBounds(17))
+                    .AddNumberInput(InputBounds(17), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetY = v), CairoFont.TextInput(), "playerOffsetY")
+                    .AddStaticText("Player Z", CairoFont.WhiteSmallText(), LabelBounds(18))
+                    .AddNumberInput(InputBounds(18), value => SetFloat(value, v => RatlineClimbDebugSettings.PlayerOffsetZ = v), CairoFont.TextInput(), "playerOffsetZ")
+                    .AddStaticText("Mast X", CairoFont.WhiteSmallText(), LabelBounds(19))
+                    .AddNumberInput(InputBounds(19), value => SetFloat(value, v => RatlineClimbDebugSettings.MastDebugXOffset = v), CairoFont.TextInput(), "mastX")
+                    .AddStaticText("Invert X", CairoFont.WhiteSmallText(), LabelBounds(20))
+                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayX = on, ElementBounds.Fixed(InputX, RowY(20) - 4, 30, 30), "invertSwayX")
+                    .AddStaticText("Invert Y", CairoFont.WhiteSmallText(), LabelBounds(21))
+                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayY = on, ElementBounds.Fixed(InputX, RowY(21) - 4, 30, 30), "invertSwayY")
+                    .AddStaticText("Invert Z", CairoFont.WhiteSmallText(), LabelBounds(22))
+                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayZ = on, ElementBounds.Fixed(InputX, RowY(22) - 4, 30, 30), "invertSwayZ")
+                    .AddStaticText("Invert Swivel", CairoFont.WhiteSmallText(), LabelBounds(23))
+                    .AddSwitch(on => RatlineClimbDebugSettings.InvertSwaySwivel = on, ElementBounds.Fixed(InputX, RowY(23) - 4, 30, 30), "invertSwaySwivel")
+                    .AddButton("Reset", OnReset, ElementBounds.Fixed(LabelX, RowY(25) + 6, 112, 32))
+                    .AddButton("Values", OnValues, ElementBounds.Fixed(LabelX + 126, RowY(25) + 6, 112, 32))
                     .AddStaticText("Use Player Offset", CairoFont.WhiteSmallText(), ToggleLabelBounds(0))
                     .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerOffset = on, ToggleSwitchBounds(0), "enablePlayerOffset")
                     .AddStaticText("Use Path Tilt", CairoFont.WhiteSmallText(), ToggleLabelBounds(1))
@@ -130,6 +132,20 @@ namespace joyofsailing
                     .AddNumberInput(BoatInputBounds(13), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugModelYawDegrees = v), CairoFont.TextInput(), "debugModelYaw")
                     .AddStaticText("Model Pitch", CairoFont.WhiteSmallText(), BoatLabelBounds(14))
                     .AddNumberInput(BoatInputBounds(14), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugModelPitchDegrees = v), CairoFont.TextInput(), "debugModelPitch")
+                    .AddStaticText("Body Yaw", CairoFont.WhiteSmallText(), BoatLabelBounds(15))
+                    .AddNumberInput(BoatInputBounds(15), value => SetFloat(value, v => RatlineClimbDebugSettings.RatlineBodyYawLimitDegrees = GameMath.Max(0f, v)), CairoFont.TextInput(), "ratlineBodyYawLimit")
+                    .AddStaticText("Camera Yaw", CairoFont.WhiteSmallText(), BoatLabelBounds(16))
+                    .AddNumberInput(BoatInputBounds(16), value => SetFloat(value, v => RatlineClimbDebugSettings.RatlineCameraYawLimitDegrees = GameMath.Max(0f, v)), CairoFont.TextInput(), "ratlineCameraYawLimit")
+                    .AddStaticText("Right Cam Off", CairoFont.WhiteSmallText(), BoatLabelBounds(17))
+                    .AddNumberInput(BoatInputBounds(17), value => SetFloat(value, v => RatlineClimbDebugSettings.RightRatlineCameraYawOffsetDegrees = v), CairoFont.TextInput(), "rightRatlineCameraYawOffset")
+                    .AddStaticText("Left Cam Off", CairoFont.WhiteSmallText(), BoatLabelBounds(18))
+                    .AddNumberInput(BoatInputBounds(18), value => SetFloat(value, v => RatlineClimbDebugSettings.LeftRatlineCameraYawOffsetDegrees = v), CairoFont.TextInput(), "leftRatlineCameraYawOffset")
+                    .AddStaticText("Eye X", CairoFont.WhiteSmallText(), BoatLabelBounds(19))
+                    .AddNumberInput(BoatInputBounds(19), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugEyeOffsetX = v), CairoFont.TextInput(), "debugEyeOffsetX")
+                    .AddStaticText("Eye Y", CairoFont.WhiteSmallText(), BoatLabelBounds(20))
+                    .AddNumberInput(BoatInputBounds(20), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugEyeOffsetY = v), CairoFont.TextInput(), "debugEyeOffsetY")
+                    .AddStaticText("Eye Z", CairoFont.WhiteSmallText(), BoatLabelBounds(21))
+                    .AddNumberInput(BoatInputBounds(21), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugEyeOffsetZ = v), CairoFont.TextInput(), "debugEyeOffsetZ")
                 .EndChildElements()
                 .Compose();
 
@@ -154,6 +170,13 @@ namespace joyofsailing
             SetInputInterval("debugModelRoll", 1f);
             SetInputInterval("debugModelYaw", 1f);
             SetInputInterval("debugModelPitch", 1f);
+            SetInputInterval("ratlineBodyYawLimit", 5f);
+            SetInputInterval("ratlineCameraYawLimit", 5f);
+            SetInputInterval("rightRatlineCameraYawOffset", 5f);
+            SetInputInterval("leftRatlineCameraYawOffset", 5f);
+            SetInputInterval("debugEyeOffsetX", 0.1f);
+            SetInputInterval("debugEyeOffsetY", 0.1f);
+            SetInputInterval("debugEyeOffsetZ", 0.1f);
         }
 
         private void SetInputInterval(string key, float interval)
@@ -240,6 +263,7 @@ namespace joyofsailing
             SetInput("tilt", RatlineClimbDebugSettings.TiltDegrees);
             SetInput("lean", RatlineClimbDebugSettings.LeanDegrees);
             SetInput("playerRotation", RatlineClimbDebugSettings.PlayerRotationDegrees);
+            SetInput("rightPlayerRotationOffset", RatlineClimbDebugSettings.RightPlayerRotationOffsetDegrees);
             SetInput("leftPlayerTilt", RatlineClimbDebugSettings.LeftPlayerTiltDegrees);
             SetInput("rightPlayerTilt", RatlineClimbDebugSettings.RightPlayerTiltDegrees);
             SetInput("leftPlayerLean", RatlineClimbDebugSettings.LeftPlayerLeanDegrees);
@@ -273,6 +297,13 @@ namespace joyofsailing
             SetInput("debugModelRoll", RatlineClimbDebugSettings.DebugModelRollDegrees);
             SetInput("debugModelYaw", RatlineClimbDebugSettings.DebugModelYawDegrees);
             SetInput("debugModelPitch", RatlineClimbDebugSettings.DebugModelPitchDegrees);
+            SetInput("ratlineBodyYawLimit", RatlineClimbDebugSettings.RatlineBodyYawLimitDegrees);
+            SetInput("ratlineCameraYawLimit", RatlineClimbDebugSettings.RatlineCameraYawLimitDegrees);
+            SetInput("rightRatlineCameraYawOffset", RatlineClimbDebugSettings.RightRatlineCameraYawOffsetDegrees);
+            SetInput("leftRatlineCameraYawOffset", RatlineClimbDebugSettings.LeftRatlineCameraYawOffsetDegrees);
+            SetInput("debugEyeOffsetX", RatlineClimbDebugSettings.DebugEyeOffsetX);
+            SetInput("debugEyeOffsetY", RatlineClimbDebugSettings.DebugEyeOffsetY);
+            SetInput("debugEyeOffsetZ", RatlineClimbDebugSettings.DebugEyeOffsetZ);
         }
 
         private void SetInput(string key, float value)
