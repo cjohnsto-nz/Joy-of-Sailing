@@ -4,13 +4,11 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
-using Vintagestory.Client.NoObf;
 
 namespace joyofsailing
 {
     public class joyofsailingModSystem : ModSystem
     {
-        public static ClientMain main;
         private GuiDialogSailboatDebug debugDialog;
         private GuiDialogSailboatTransformDebug transformDebugDialog;
 
@@ -31,8 +29,6 @@ namespace joyofsailing
         public override void StartClientSide(ICoreClientAPI api)
         {
             api.Logger.Notification("Hello from template mod client side: " + Lang.Get("joyofsailing2:hello"));
-
-            main = api.World as ClientMain;
 
             transformDebugDialog = new GuiDialogSailboatTransformDebug(api);
             api.Gui.RegisterDialog(transformDebugDialog);
@@ -57,6 +53,11 @@ namespace joyofsailing
             }
 
             return debugDialog.TryOpen();
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
         }
     }
 }

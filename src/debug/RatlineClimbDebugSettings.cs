@@ -62,6 +62,26 @@ namespace joyofsailing
         public const float DefaultBoatSwivelDegrees = 0f;
         public const bool DefaultOverrideBoatYaw = false;
         public const float DefaultBoatYawDegrees = 0f;
+        public const float DefaultDebugSeatOffsetX = 0f;
+        public const float DefaultDebugSeatOffsetY = 0f;
+        public const float DefaultDebugSeatOffsetZ = 0f;
+        public const float DefaultDebugSeatRollDegrees = 0f;
+        public const float DefaultDebugSeatYawDegrees = 0f;
+        public const float DefaultDebugSeatPitchDegrees = 0f;
+        public const int DefaultDebugSeatAngleMode = -1;
+        public const bool DefaultEnablePatchedPlayerRoll = true;
+        public const bool DefaultEnablePatchedPlayerYaw = true;
+        public const bool DefaultFreezeSeatYaw = false;
+        public const float DefaultFrozenSeatYawDegrees = 0f;
+        public const float DefaultDebugEyeOffsetX = 0f;
+        public const float DefaultDebugEyeOffsetY = 0f;
+        public const float DefaultDebugEyeOffsetZ = 0f;
+        public const float DefaultDebugModelOffsetX = 0f;
+        public const float DefaultDebugModelOffsetY = 0f;
+        public const float DefaultDebugModelOffsetZ = 0f;
+        public const float DefaultDebugModelRollDegrees = 0f;
+        public const float DefaultDebugModelYawDegrees = 0f;
+        public const float DefaultDebugModelPitchDegrees = 0f;
 
         public static bool DrawPath = true;
         public static float Speed = 1.25f;
@@ -116,6 +136,26 @@ namespace joyofsailing
         public static float BoatSwivelDegrees = DefaultBoatSwivelDegrees;
         public static bool OverrideBoatYaw = DefaultOverrideBoatYaw;
         public static float BoatYawDegrees = DefaultBoatYawDegrees;
+        public static float DebugSeatOffsetX = DefaultDebugSeatOffsetX;
+        public static float DebugSeatOffsetY = DefaultDebugSeatOffsetY;
+        public static float DebugSeatOffsetZ = DefaultDebugSeatOffsetZ;
+        public static float DebugSeatRollDegrees = DefaultDebugSeatRollDegrees;
+        public static float DebugSeatYawDegrees = DefaultDebugSeatYawDegrees;
+        public static float DebugSeatPitchDegrees = DefaultDebugSeatPitchDegrees;
+        public static int DebugSeatAngleMode = DefaultDebugSeatAngleMode;
+        public static bool EnablePatchedPlayerRoll = DefaultEnablePatchedPlayerRoll;
+        public static bool EnablePatchedPlayerYaw = DefaultEnablePatchedPlayerYaw;
+        public static bool FreezeSeatYaw = DefaultFreezeSeatYaw;
+        public static float FrozenSeatYawDegrees = DefaultFrozenSeatYawDegrees;
+        public static float DebugEyeOffsetX = DefaultDebugEyeOffsetX;
+        public static float DebugEyeOffsetY = DefaultDebugEyeOffsetY;
+        public static float DebugEyeOffsetZ = DefaultDebugEyeOffsetZ;
+        public static float DebugModelOffsetX = DefaultDebugModelOffsetX;
+        public static float DebugModelOffsetY = DefaultDebugModelOffsetY;
+        public static float DebugModelOffsetZ = DefaultDebugModelOffsetZ;
+        public static float DebugModelRollDegrees = DefaultDebugModelRollDegrees;
+        public static float DebugModelYawDegrees = DefaultDebugModelYawDegrees;
+        public static float DebugModelPitchDegrees = DefaultDebugModelPitchDegrees;
 
         public static float MaxClimbHeight => GameMath.Max(0f, (EndY - StartY) / ModelUnitsPerBlock);
 
@@ -174,6 +214,26 @@ namespace joyofsailing
             BoatSwivelDegrees = DefaultBoatSwivelDegrees;
             OverrideBoatYaw = DefaultOverrideBoatYaw;
             BoatYawDegrees = DefaultBoatYawDegrees;
+            DebugSeatOffsetX = DefaultDebugSeatOffsetX;
+            DebugSeatOffsetY = DefaultDebugSeatOffsetY;
+            DebugSeatOffsetZ = DefaultDebugSeatOffsetZ;
+            DebugSeatRollDegrees = DefaultDebugSeatRollDegrees;
+            DebugSeatYawDegrees = DefaultDebugSeatYawDegrees;
+            DebugSeatPitchDegrees = DefaultDebugSeatPitchDegrees;
+            DebugSeatAngleMode = DefaultDebugSeatAngleMode;
+            EnablePatchedPlayerRoll = DefaultEnablePatchedPlayerRoll;
+            EnablePatchedPlayerYaw = DefaultEnablePatchedPlayerYaw;
+            FreezeSeatYaw = DefaultFreezeSeatYaw;
+            FrozenSeatYawDegrees = DefaultFrozenSeatYawDegrees;
+            DebugEyeOffsetX = DefaultDebugEyeOffsetX;
+            DebugEyeOffsetY = DefaultDebugEyeOffsetY;
+            DebugEyeOffsetZ = DefaultDebugEyeOffsetZ;
+            DebugModelOffsetX = DefaultDebugModelOffsetX;
+            DebugModelOffsetY = DefaultDebugModelOffsetY;
+            DebugModelOffsetZ = DefaultDebugModelOffsetZ;
+            DebugModelRollDegrees = DefaultDebugModelRollDegrees;
+            DebugModelYawDegrees = DefaultDebugModelYawDegrees;
+            DebugModelPitchDegrees = DefaultDebugModelPitchDegrees;
         }
     }
 }

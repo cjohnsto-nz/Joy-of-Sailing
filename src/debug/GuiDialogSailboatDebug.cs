@@ -86,50 +86,20 @@ namespace joyofsailing
                     .AddSwitch(on => RatlineClimbDebugSettings.InvertSwayZ = on, ElementBounds.Fixed(InputX, RowY(21) - 4, 30, 30), "invertSwayZ")
                     .AddStaticText("Invert Swivel", CairoFont.WhiteSmallText(), LabelBounds(22))
                     .AddSwitch(on => RatlineClimbDebugSettings.InvertSwaySwivel = on, ElementBounds.Fixed(InputX, RowY(22) - 4, 30, 30), "invertSwaySwivel")
-                    .AddStaticText("Inv Player FB", CairoFont.WhiteSmallText(), LabelBounds(23))
-                    .AddSwitch(on => RatlineClimbDebugSettings.InvertPlayerFrontBackSway = on, ElementBounds.Fixed(InputX, RowY(23) - 4, 30, 30), "invertPlayerFrontBackSway")
                     .AddButton("Reset", OnReset, ElementBounds.Fixed(LabelX, RowY(24) + 6, 112, 32))
                     .AddButton("Values", OnValues, ElementBounds.Fixed(LabelX + 126, RowY(24) + 6, 112, 32))
-                    .AddStaticText("Use Path Offset", CairoFont.WhiteSmallText(), ToggleLabelBounds(0))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePathOffset = on, ToggleSwitchBounds(0), "enablePathOffset")
-                    .AddStaticText("Use Sway Offset", CairoFont.WhiteSmallText(), ToggleLabelBounds(1))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableSwayOffset = on, ToggleSwitchBounds(1), "enableSwayOffset")
-                    .AddStaticText("Use Player Offset", CairoFont.WhiteSmallText(), ToggleLabelBounds(2))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerOffset = on, ToggleSwitchBounds(2), "enablePlayerOffset")
-                    .AddStaticText("Use Path Tilt", CairoFont.WhiteSmallText(), ToggleLabelBounds(3))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePathTilt = on, ToggleSwitchBounds(3), "enablePathTilt")
-                    .AddStaticText("Use Path Lean", CairoFont.WhiteSmallText(), ToggleLabelBounds(4))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePathLean = on, ToggleSwitchBounds(4), "enablePathLean")
-                    .AddStaticText("Use Player Tilt", CairoFont.WhiteSmallText(), ToggleLabelBounds(5))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerTilt = on, ToggleSwitchBounds(5), "enablePlayerTilt")
-                    .AddStaticText("Use Player Yaw", CairoFont.WhiteSmallText(), ToggleLabelBounds(6))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerYaw = on, ToggleSwitchBounds(6), "enablePlayerYaw")
-                    .AddStaticText("Use Player Lean", CairoFont.WhiteSmallText(), ToggleLabelBounds(7))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerLean = on, ToggleSwitchBounds(7), "enablePlayerLean")
-                    .AddStaticText("Use Seat Path Roll", CairoFont.WhiteSmallText(), ToggleLabelBounds(8))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableSeatPathRoll = on, ToggleSwitchBounds(8), "enableSeatPathRoll")
-                    .AddStaticText("Use Seat Path Yaw", CairoFont.WhiteSmallText(), ToggleLabelBounds(9))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableSeatPathYaw = on, ToggleSwitchBounds(9), "enableSeatPathYaw")
-                    .AddStaticText("Use Seat Path Pitch", CairoFont.WhiteSmallText(), ToggleLabelBounds(10))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableSeatPathPitch = on, ToggleSwitchBounds(10), "enableSeatPathPitch")
-                    .AddStaticText("Use Seat Pose Roll", CairoFont.WhiteSmallText(), ToggleLabelBounds(11))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableSeatConfigRoll = on, ToggleSwitchBounds(11), "enableSeatConfigRoll")
-                    .AddStaticText("Use Seat Pose Yaw", CairoFont.WhiteSmallText(), ToggleLabelBounds(12))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableSeatConfigYaw = on, ToggleSwitchBounds(12), "enableSeatConfigYaw")
-                    .AddStaticText("Use Seat Pose Pitch", CairoFont.WhiteSmallText(), ToggleLabelBounds(13))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableSeatConfigPitch = on, ToggleSwitchBounds(13), "enableSeatConfigPitch")
-                    .AddStaticText("Use Direct Seat FB", CairoFont.WhiteSmallText(), ToggleLabelBounds(14))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableSeatFrontBackSway = on, ToggleSwitchBounds(14), "enableSeatFrontBackSway")
-                    .AddStaticText("Use Direct FB Src", CairoFont.WhiteSmallText(), ToggleLabelBounds(15))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerFrontBackSway = on, ToggleSwitchBounds(15), "enablePlayerFrontBackSway")
-                    .AddStaticText("Use Eye Tilt", CairoFont.WhiteSmallText(), ToggleLabelBounds(16))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableEyeConfigTilt = on, ToggleSwitchBounds(16), "enableEyeConfigTilt")
-                    .AddStaticText("Use Eye Lean", CairoFont.WhiteSmallText(), ToggleLabelBounds(17))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableEyeConfigLean = on, ToggleSwitchBounds(17), "enableEyeConfigLean")
-                    .AddStaticText("Use Direct Eye FB", CairoFont.WhiteSmallText(), ToggleLabelBounds(18))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableEyeFrontBackSway = on, ToggleSwitchBounds(18), "enableEyeFrontBackSway")
-                    .AddStaticText("Use Direct Model FB", CairoFont.WhiteSmallText(), ToggleLabelBounds(19))
-                    .AddSwitch(on => RatlineClimbDebugSettings.EnableModelFrontBackSway = on, ToggleSwitchBounds(19), "enableModelFrontBackSway")
+                    .AddStaticText("Use Player Offset", CairoFont.WhiteSmallText(), ToggleLabelBounds(0))
+                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerOffset = on, ToggleSwitchBounds(0), "enablePlayerOffset")
+                    .AddStaticText("Use Path Tilt", CairoFont.WhiteSmallText(), ToggleLabelBounds(1))
+                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePathTilt = on, ToggleSwitchBounds(1), "enablePathTilt")
+                    .AddStaticText("Use Path Lean", CairoFont.WhiteSmallText(), ToggleLabelBounds(2))
+                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePathLean = on, ToggleSwitchBounds(2), "enablePathLean")
+                    .AddStaticText("Use Model Tilt", CairoFont.WhiteSmallText(), ToggleLabelBounds(3))
+                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerTilt = on, ToggleSwitchBounds(3), "enablePlayerTilt")
+                    .AddStaticText("Use Model Yaw", CairoFont.WhiteSmallText(), ToggleLabelBounds(4))
+                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerYaw = on, ToggleSwitchBounds(4), "enablePlayerYaw")
+                    .AddStaticText("Use Model Lean", CairoFont.WhiteSmallText(), ToggleLabelBounds(5))
+                    .AddSwitch(on => RatlineClimbDebugSettings.EnablePlayerLean = on, ToggleSwitchBounds(5), "enablePlayerLean")
                     .AddStaticText("Ratline Steer", CairoFont.WhiteSmallText(), BoatLabelBounds(0))
                     .AddSwitch(on => RatlineClimbDebugSettings.EnableRatlineSteering = on, BoatSwitchBounds(0), "enableRatlineSteering")
                     .AddStaticText("Steer Mul", CairoFont.WhiteSmallText(), BoatLabelBounds(1))
@@ -148,6 +118,18 @@ namespace joyofsailing
                     .AddSwitch(on => RatlineClimbDebugSettings.OverrideBoatYaw = on, BoatSwitchBounds(7), "overrideBoatYaw")
                     .AddStaticText("Yaw Deg", CairoFont.WhiteSmallText(), BoatLabelBounds(8))
                     .AddNumberInput(BoatInputBounds(8), value => SetFloat(value, v => RatlineClimbDebugSettings.BoatYawDegrees = v), CairoFont.TextInput(), "boatYaw")
+                    .AddStaticText("Model X", CairoFont.WhiteSmallText(), BoatLabelBounds(9))
+                    .AddNumberInput(BoatInputBounds(9), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugModelOffsetX = v), CairoFont.TextInput(), "debugModelOffsetX")
+                    .AddStaticText("Model Y", CairoFont.WhiteSmallText(), BoatLabelBounds(10))
+                    .AddNumberInput(BoatInputBounds(10), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugModelOffsetY = v), CairoFont.TextInput(), "debugModelOffsetY")
+                    .AddStaticText("Model Z", CairoFont.WhiteSmallText(), BoatLabelBounds(11))
+                    .AddNumberInput(BoatInputBounds(11), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugModelOffsetZ = v), CairoFont.TextInput(), "debugModelOffsetZ")
+                    .AddStaticText("Model Roll", CairoFont.WhiteSmallText(), BoatLabelBounds(12))
+                    .AddNumberInput(BoatInputBounds(12), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugModelRollDegrees = v), CairoFont.TextInput(), "debugModelRoll")
+                    .AddStaticText("Model Yaw", CairoFont.WhiteSmallText(), BoatLabelBounds(13))
+                    .AddNumberInput(BoatInputBounds(13), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugModelYawDegrees = v), CairoFont.TextInput(), "debugModelYaw")
+                    .AddStaticText("Model Pitch", CairoFont.WhiteSmallText(), BoatLabelBounds(14))
+                    .AddNumberInput(BoatInputBounds(14), value => SetFloat(value, v => RatlineClimbDebugSettings.DebugModelPitchDegrees = v), CairoFont.TextInput(), "debugModelPitch")
                 .EndChildElements()
                 .Compose();
 
@@ -166,6 +148,12 @@ namespace joyofsailing
             SetInputInterval("boatSwayZ", 1f);
             SetInputInterval("boatSwivel", 1f);
             SetInputInterval("boatYaw", 5f);
+            SetInputInterval("debugModelOffsetX", 0.1f);
+            SetInputInterval("debugModelOffsetY", 0.1f);
+            SetInputInterval("debugModelOffsetZ", 0.1f);
+            SetInputInterval("debugModelRoll", 1f);
+            SetInputInterval("debugModelYaw", 1f);
+            SetInputInterval("debugModelPitch", 1f);
         }
 
         private void SetInputInterval(string key, float interval)
@@ -264,27 +252,12 @@ namespace joyofsailing
             SingleComposer.GetSwitch("invertSwayY").SetValue(RatlineClimbDebugSettings.InvertSwayY);
             SingleComposer.GetSwitch("invertSwayZ").SetValue(RatlineClimbDebugSettings.InvertSwayZ);
             SingleComposer.GetSwitch("invertSwaySwivel").SetValue(RatlineClimbDebugSettings.InvertSwaySwivel);
-            SingleComposer.GetSwitch("invertPlayerFrontBackSway").SetValue(RatlineClimbDebugSettings.InvertPlayerFrontBackSway);
-            SingleComposer.GetSwitch("enablePathOffset").SetValue(RatlineClimbDebugSettings.EnablePathOffset);
-            SingleComposer.GetSwitch("enableSwayOffset").SetValue(RatlineClimbDebugSettings.EnableSwayOffset);
             SingleComposer.GetSwitch("enablePlayerOffset").SetValue(RatlineClimbDebugSettings.EnablePlayerOffset);
             SingleComposer.GetSwitch("enablePathTilt").SetValue(RatlineClimbDebugSettings.EnablePathTilt);
             SingleComposer.GetSwitch("enablePathLean").SetValue(RatlineClimbDebugSettings.EnablePathLean);
             SingleComposer.GetSwitch("enablePlayerTilt").SetValue(RatlineClimbDebugSettings.EnablePlayerTilt);
             SingleComposer.GetSwitch("enablePlayerYaw").SetValue(RatlineClimbDebugSettings.EnablePlayerYaw);
             SingleComposer.GetSwitch("enablePlayerLean").SetValue(RatlineClimbDebugSettings.EnablePlayerLean);
-            SingleComposer.GetSwitch("enableSeatPathRoll").SetValue(RatlineClimbDebugSettings.EnableSeatPathRoll);
-            SingleComposer.GetSwitch("enableSeatPathYaw").SetValue(RatlineClimbDebugSettings.EnableSeatPathYaw);
-            SingleComposer.GetSwitch("enableSeatPathPitch").SetValue(RatlineClimbDebugSettings.EnableSeatPathPitch);
-            SingleComposer.GetSwitch("enableSeatConfigRoll").SetValue(RatlineClimbDebugSettings.EnableSeatConfigRoll);
-            SingleComposer.GetSwitch("enableSeatConfigYaw").SetValue(RatlineClimbDebugSettings.EnableSeatConfigYaw);
-            SingleComposer.GetSwitch("enableSeatConfigPitch").SetValue(RatlineClimbDebugSettings.EnableSeatConfigPitch);
-            SingleComposer.GetSwitch("enableSeatFrontBackSway").SetValue(RatlineClimbDebugSettings.EnableSeatFrontBackSway);
-            SingleComposer.GetSwitch("enablePlayerFrontBackSway").SetValue(RatlineClimbDebugSettings.EnablePlayerFrontBackSway);
-            SingleComposer.GetSwitch("enableEyeConfigTilt").SetValue(RatlineClimbDebugSettings.EnableEyeConfigTilt);
-            SingleComposer.GetSwitch("enableEyeConfigLean").SetValue(RatlineClimbDebugSettings.EnableEyeConfigLean);
-            SingleComposer.GetSwitch("enableEyeFrontBackSway").SetValue(RatlineClimbDebugSettings.EnableEyeFrontBackSway);
-            SingleComposer.GetSwitch("enableModelFrontBackSway").SetValue(RatlineClimbDebugSettings.EnableModelFrontBackSway);
             SingleComposer.GetSwitch("enableRatlineSteering").SetValue(RatlineClimbDebugSettings.EnableRatlineSteering);
             SetInput("ratlineSteeringMultiplier", RatlineClimbDebugSettings.RatlineSteeringMultiplier);
             SingleComposer.GetSwitch("overrideBoatSway").SetValue(RatlineClimbDebugSettings.OverrideBoatSway);
@@ -294,11 +267,22 @@ namespace joyofsailing
             SetInput("boatSwivel", RatlineClimbDebugSettings.BoatSwivelDegrees);
             SingleComposer.GetSwitch("overrideBoatYaw").SetValue(RatlineClimbDebugSettings.OverrideBoatYaw);
             SetInput("boatYaw", RatlineClimbDebugSettings.BoatYawDegrees);
+            SetInput("debugModelOffsetX", RatlineClimbDebugSettings.DebugModelOffsetX);
+            SetInput("debugModelOffsetY", RatlineClimbDebugSettings.DebugModelOffsetY);
+            SetInput("debugModelOffsetZ", RatlineClimbDebugSettings.DebugModelOffsetZ);
+            SetInput("debugModelRoll", RatlineClimbDebugSettings.DebugModelRollDegrees);
+            SetInput("debugModelYaw", RatlineClimbDebugSettings.DebugModelYawDegrees);
+            SetInput("debugModelPitch", RatlineClimbDebugSettings.DebugModelPitchDegrees);
         }
 
         private void SetInput(string key, float value)
         {
             SingleComposer.GetTextInput(key).SetValue(value.ToString("0.###", CultureInfo.InvariantCulture));
+        }
+
+        private void SetInput(string key, int value)
+        {
+            SingleComposer.GetTextInput(key).SetValue(value.ToString(CultureInfo.InvariantCulture));
         }
 
         private void SetFloat(string value, Action<float> setter)
