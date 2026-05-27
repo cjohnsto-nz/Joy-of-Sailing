@@ -229,6 +229,20 @@
         }
       ]
     },
+    "writingsurface": {
+      "fontConfig": {
+        "maxWidth": 208,
+        "maxHeight": 96,
+        "fontSize": 20,
+        "textVoxelOffsetY": -1,
+        "textVoxelOffsetZ": 0.25,
+        "textVoxelHeight": 6,
+        "fontName": "Almendra",
+        "verticalAlign": "Middle",
+        "boldFont": true
+      },
+      "writingSurfaces": [ "LPlaqueAP", "RPlaqueAP" ]
+    },
     "rideableaccessories": {
       "dropContentsOnDeath": true,
       "__comment": "These need to be in the same order as the selectionBoxes array further down",
@@ -251,7 +265,7 @@
         },
         {
           "code": "Figurehead",
-          "forCategoryCodes": [ "chiseledblock" ],
+          "forCategoryCodes": [ "figurehead", "chiseled", "chiseledblock" ],
           "attachmentPointCode": "FigureheadAP",
           "stepParentTo": {
             "": { "elementName": "FigureHeadStorage" }
@@ -360,6 +374,148 @@
           }
         },
         {
+          "code": "Left Plaque",
+          "forCategoryCodes": [ "plaque" ],
+          "attachmentPointCode": "LPlaqueAP",
+          "stepParentTo": {
+            "": { "elementName": "PlaqueLeftFront" }
+          }
+        },
+        {
+          "code": "Right Plaque",
+          "forCategoryCodes": [ "plaque" ],
+          "attachmentPointCode": "RPlaqueAP",
+          "stepParentTo": {
+            "": { "elementName": "PlaqueRightFront" }
+          }
+        },
+        {
+          "code": "Right Shield1",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "RShield1AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "RShield1SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Right Shield2",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "RShield2AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "RShield2SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Right Shield3",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "RShield3AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "RShield3SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Right Shield4",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "RShield4AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "RShield4SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Right Shield5",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "RShield5AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "RShield5SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Right Shield6",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "RShield6AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "RShield6SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Right Shield7",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "RShield7AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "RShield7SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Left Shield1",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "LShield1AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "LShield1SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Left Shield2",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "LShield2AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "LShield2SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Left Shield3",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "LShield3AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "LShield3SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Left Shield4",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "LShield4AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "LShield4SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Left Shield5",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "LShield5AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "LShield5SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Left Shield6",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "LShield6AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "LShield6SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
+          "code": "Left Shield7",
+          "forCategoryCodes": [ "shield" ],
+          "attachmentPointCode": "LShield7AP",
+          "stepParentTo": {
+            "LowerArmL": { "elementName": "LShield7SP" }
+          },
+          "emptyInteractPassThrough": true
+        },
+        {
           "code": "Clew Knot R",
           "forCategoryCodes": [],
           "attachmentPointCode": "ClewKnotRAP",
@@ -460,6 +616,22 @@
         "LeftSeatAP",
         "RightSeatAP",
         "LowerMastAP",
+        "LPlaqueAP",
+        "RPlaqueAP",
+        "RShield1AP",
+        "RShield2AP",
+        "RShield3AP",
+        "RShield4AP",
+        "RShield5AP",
+        "RShield6AP",
+        "RShield7AP",
+        "LShield1AP",
+        "LShield2AP",
+        "LShield3AP",
+        "LShield4AP",
+        "LShield5AP",
+        "LShield6AP",
+        "LShield7AP",
         "ClewKnotRAP",
         "ClewKnotLAP",
         "CordageTopRightAP",
@@ -522,7 +694,8 @@
       },
       { "code": "selectionboxes" },
       { "code": "rideableaccessories" },
-      { "code": "creaturecarrier" }
+      { "code": "creaturecarrier" },
+      { "code": "writingsurface" }
     ]
   },
   "server": {
@@ -534,7 +707,8 @@
       { "code": "passivephysicsmultibox" },
       { "code": "selectionboxes" },
       { "code": "rideableaccessories" },
-      { "code": "creaturecarrier" }
+      { "code": "creaturecarrier" },
+      { "code": "writingsurface" }
     ]
   },
   "sounds": {}

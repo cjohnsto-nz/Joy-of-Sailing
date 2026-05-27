@@ -14,6 +14,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.Common;
@@ -40,6 +41,9 @@ namespace joyofsailing
         const double MastDebugLineStartOffset = 0.5;
         const double MastDebugLineLength = 5.0;
         const double RatlineBasisDebugLineLength = 0.75;
+        const string JoySailLevelAttribute = "josailing.sailLevel";
+        const string JoySailAngleAttribute = "josailing.sailAngle";
+        const string VanillaSailPositionAttribute = "sailPosition";
         static readonly System.Reflection.FieldInfo RiderOffsetField = typeof(SeatConfig).GetField("RiderOffset");
         static readonly Vec3f RatlineBaseRiderOffset = new Vec3f();
         static readonly Vec3f RatlineNeutralMountRotation = new Vec3f();
@@ -89,9 +93,10 @@ namespace joyofsailing
             base.Initialize(properties, api, InChunkIndex3d);
 
             behaviorSelectionBoxes = this.GetBehavior<EntityBehaviorSelectionBoxes>();
-            sailAttr = properties.Attributes["sailAttributes"].AsObject<SailboatAttributes>();
+            JsonObject sailAttributesJson = properties.Attributes?["sailAttributes"];
+            sailAttr = sailAttributesJson?.Exists == true ? sailAttributesJson.AsObject<SailboatAttributes>() : null;
 
-            if (api is ICoreClientAPI capi)
+            if (sailAttr != null && api is ICoreClientAPI capi)
             {
                 ratlineDebugRenderer = new RatlineDebugRenderer(capi, this);
                 capi.Event.RegisterRenderer(ratlineDebugRenderer, EnumRenderStage.OIT, "josailing-ratline-debug");
@@ -100,6 +105,12 @@ namespace joyofsailing
 
         public override void OnRenderFrame(float dt, EnumRenderStage stage)
         {
+            if (sailAttr == null)
+            {
+                base.OnRenderFrame(dt, stage);
+                return;
+            }
+
             ICoreClientAPI capi = Api as ICoreClientAPI;
 
             if (!capi.IsGamePaused)
@@ -153,6 +164,12 @@ namespace joyofsailing
 
         public override void OnTesselation(ref Shape entityShape, string shapePathForLogging)
         {
+            if (sailAttr == null)
+            {
+                base.OnTesselation(ref entityShape, shapePathForLogging);
+                return;
+            }
+
             Shape shape = entityShape;
 
             if (shape == entityShape)
@@ -227,9 +244,15 @@ namespace joyofsailing
 
         protected override void updateBoatAngleAndMotion(float dt)
         {
+            if (sailAttr == null)
+            {
+                base.updateBoatAngleAndMotion(dt);
+                return;
+            }
 
 
             updateWind();
+            EnsureLegacySailPositionMigrated();
 
             dt = Math.Min(0.5f, dt);
             float physicsFrameTime = GlobalConstants.PhysicsFrameTime;
@@ -247,8 +270,8 @@ namespace joyofsailing
 
             if (!hasController && hasRatlinePassenger)
             {
-                sailLevel = WatchedAttributes.GetFloat("josailing.sailLevel", sailLevel);
-                sailAngle = WatchedAttributes.GetFloat("josailing.sailAngle", sailAngle);
+                sailLevel = WatchedAttributes.GetFloat(JoySailLevelAttribute, sailLevel);
+                sailAngle = WatchedAttributes.GetFloat(JoySailAngleAttribute, sailAngle);
             }
 
             //ForwardSpeed += (vec2d.X * (double)SpeedMultiplier - ForwardSpeed) * (double)dt;
@@ -265,7 +288,7 @@ namespace joyofsailing
             if (!hasController && !hasRatlinePassenger)
             {
                 sailLevel = 0f;
-                WatchedAttributes.SetFloat("josailing.sailLevel", sailLevel);
+                WatchedAttributes.SetFloat(JoySailLevelAttribute, sailLevel);
             }
 
             float windYaw = ((Pos.Yaw * 57.2958f % 360f + (float)windAngle) + 360f + 180f) % 360f - 180f;
@@ -329,12 +352,57 @@ namespace joyofsailing
 
             if (controlsVec != Vec3d.Zero || hasRatlinePassenger)
             {
-                WatchedAttributes.SetFloat("josailing.sailLevel", sailLevel);
-                WatchedAttributes.SetFloat("josailing.sailAngle", sailAngle);
+                WatchedAttributes.SetFloat(JoySailLevelAttribute, sailLevel);
+                WatchedAttributes.SetFloat(JoySailAngleAttribute, sailAngle);
             }
 
-            sailLevel = WatchedAttributes.GetFloat("josailing.sailLevel", 0f);
-            sailAngle = WatchedAttributes.GetFloat("josailing.sailAngle", 0f);
+            SyncVanillaSailPosition();
+
+            sailLevel = WatchedAttributes.GetFloat(JoySailLevelAttribute, 0f);
+            sailAngle = WatchedAttributes.GetFloat(JoySailAngleAttribute, 0f);
+        }
+
+        private void EnsureLegacySailPositionMigrated()
+        {
+            if (WatchedAttributes == null)
+            {
+                return;
+            }
+
+            float existingJoySailLevel = WatchedAttributes.GetFloat(JoySailLevelAttribute, sailLevel);
+            if (existingJoySailLevel > 0f)
+            {
+                return;
+            }
+
+            int legacySailPosition = WatchedAttributes.GetInt(VanillaSailPositionAttribute, 0);
+            if (legacySailPosition <= 0)
+            {
+                return;
+            }
+
+            sailLevel = GameMath.Clamp(legacySailPosition / 2f, 0f, 1f);
+            sailAngle = WatchedAttributes.GetFloat(JoySailAngleAttribute, sailAngle);
+            WatchedAttributes.SetFloat(JoySailLevelAttribute, sailLevel);
+            WatchedAttributes.SetFloat(JoySailAngleAttribute, sailAngle);
+            MarkShapeModified();
+        }
+
+        private void SyncVanillaSailPosition()
+        {
+            if (WatchedAttributes == null)
+            {
+                return;
+            }
+
+            int vanillaSailPosition = sailLevel >= 0.75f ? 2 : sailLevel > 0.00001f ? 1 : 0;
+            if (WatchedAttributes.GetInt(VanillaSailPositionAttribute, -1) == vanillaSailPosition)
+            {
+                return;
+            }
+
+            WatchedAttributes.SetInt(VanillaSailPositionAttribute, vanillaSailPosition);
+            MarkShapeModified();
         }
 
         public virtual Vec3d SeatsToMotionSail(float dt, float climbDt, ref bool hasController, ref bool hasRatlinePassenger)
@@ -346,9 +414,7 @@ namespace joyofsailing
             EntityBehaviorSeatable behavior = GetBehavior<EntityBehaviorSeatable>();
             behavior.Controller = null;
             IMountableSeat[] seats = behavior.Seats;
-            bool hasControllablePassenger = seats.Any(seat => seat is EntityBoatSeat boatSeat
-                && boatSeat.Passenger != null
-                && boatSeat.Config?.Controllable == true);
+            bool hasControllablePassenger = HasControllablePassenger(seats);
             for (int i = 0; i < seats.Length; i++)
             {
                 EntityBoatSeat entityBoatSeat = seats[i] as EntityBoatSeat;
@@ -523,6 +589,11 @@ namespace joyofsailing
                 }
             }
 
+            if (!hasControllablePassenger)
+            {
+                DisableAutoSculling();
+            }
+
             if (isAutoSculling)
             {
                 int scullingSide = (autoScullTimer > 1f) ? 1 : -1;
@@ -533,6 +604,52 @@ namespace joyofsailing
             }
 
             return new Vec3d(forwardAxis, sideAxis, sprintAxis);
+        }
+
+        private void DisableAutoSculling()
+        {
+            isAutoSculling = false;
+            canDisableAutoSculling = false;
+            autoScullEnableTimer = 0f;
+            autoScullTimer = 0f;
+        }
+
+        private bool HasControllablePassenger()
+        {
+            EntityBehaviorSeatable behavior = GetBehavior<EntityBehaviorSeatable>();
+            return HasControllablePassenger(behavior?.Seats);
+        }
+
+        private static bool HasControllablePassenger(IMountableSeat[] seats)
+        {
+            return seats != null && seats.Any(seat => seat is EntityBoatSeat boatSeat
+                && boatSeat.Passenger != null
+                && boatSeat.Config?.Controllable == true);
+        }
+
+        private float GetCurrentWindYawDegrees()
+        {
+            return ((Pos.Yaw * GameMath.RAD2DEG % 360f + (float)windAngle) + 360f + 180f) % 360f - 180f;
+        }
+
+        private float GetCurrentWindSailDifferenceDegrees()
+        {
+            return (GetCurrentWindYawDegrees() + sailAngle + 360f + 180f) % 360f - 180f;
+        }
+
+        private float GetCurrentSailDrivenSpeed()
+        {
+            if (sailAttr == null)
+            {
+                return 0f;
+            }
+
+            float effectiveWindSpeed = Math.Max(Math.Max((float)windSpeed, sailAttr.minimumWindSpeed), World.Config.GetFloat("joyofsailing.minwindspeed", 0f));
+            return sailAccuracy
+                * effectiveWindSpeed
+                * sailAttr.windSpeedMultiplier
+                * World.Config.GetFloat("joyofsailing.sailspeedmul", 1f)
+                * sailLevel;
         }
 
         private static bool IsRatlineSeat(EntityBoatSeat seat)
@@ -1006,6 +1123,21 @@ namespace joyofsailing
             left.AppendLine("Swimming: " + Swimming);
             left.AppendLine("Ratline steering: " + RatlineClimbDebugSettings.EnableRatlineSteering
                 + " x" + F(RatlineClimbDebugSettings.RatlineSteeringMultiplier));
+
+            left.AppendLine();
+            left.AppendLine("--- Movement State ---");
+            left.AppendLine("Driver occupied: " + HasControllablePassenger());
+            left.AppendLine("Auto sculling: " + isAutoSculling);
+            left.AppendLine("Auto scull enable timer: " + F(autoScullEnableTimer));
+            left.AppendLine("Auto scull timer: " + F(autoScullTimer));
+            left.AppendLine("Sail level: " + F(sailLevel));
+            left.AppendLine("Sail angle: " + F(sailAngle));
+            left.AppendLine("Sail accuracy: " + F(sailAccuracy));
+            left.AppendLine("Wind speed: " + F((float)windSpeed));
+            left.AppendLine("Wind angle: " + F((float)windAngle));
+            left.AppendLine("Wind yaw: " + F(GetCurrentWindYawDegrees()));
+            left.AppendLine("Wind/sail diff: " + F(GetCurrentWindSailDifferenceDegrees()));
+            left.AppendLine("Sail-driven desired speed: " + F(GetCurrentSailDrivenSpeed()));
 
             left.AppendLine();
             left.AppendLine("--- Active Contribution Switches ---");

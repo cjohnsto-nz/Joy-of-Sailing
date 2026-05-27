@@ -21,6 +21,9 @@ namespace joyofsailing
         {
             RatlineClimbDebugSettings.ResetRuntimeToDefaults();
             api.RegisterEntity("EntitySailboat", typeof(EntitySailboat));
+            // Save Joy sailboats under the vanilla class name so worlds can be reopened
+            // without this mod after they have been loaded and saved once with Joy present.
+            api.RegisterEntity("EntityBoat", typeof(EntitySailboat));
             Achievements.AchievementsManager.RegisterAchievement("joyofsailing", "joyofsailing.setsail", "joyofsailing:sailboat-oak");
         }
 
